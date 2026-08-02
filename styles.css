@@ -370,3 +370,124 @@
   padding: 4px 10px;
   background: var(--background-primary);
 }
+
+.smart-notes-habits-wrap {
+  overflow-x: auto;
+}
+
+.smart-notes-habits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.smart-notes-habits-table th,
+.smart-notes-habits-table td {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding: 5px 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.smart-notes-habits-table th:first-child,
+.smart-notes-habits-table td:first-child {
+  text-align: left;
+}
+
+.smart-notes-habits-table thead th {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.smart-notes-habits-table thead th button {
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.smart-notes-habits-table thead th button:hover {
+  text-decoration: underline;
+}
+
+.smart-notes-habit-name {
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smart-notes-habit-head {
+  width: 34px;
+}
+
+.smart-notes-habit-day button {
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+
+.smart-notes-habit-day button:hover {
+  text-decoration: underline;
+}
+
+.smart-notes-habit-status-cell {
+  width: 28px;
+}
+
+.smart-notes-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.smart-notes-status-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.smart-notes-habit-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.smart-notes-habit-icon-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.smart-notes-habit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.smart-notes-habit-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.1;
+}
+
+.smart-notes-habit-score {
+  font-weight: 700;
+}

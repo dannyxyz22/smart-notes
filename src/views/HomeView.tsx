@@ -1,6 +1,7 @@
 import * as React from "react";
-import { App, TFile, WorkspaceLeaf } from "obsidian";
+import { App, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
+import { useHabitsTracker } from "../data/useHabitsTracker";
 import { SmartNotesSettings } from "../settings";
 
 interface HomeViewProps {
@@ -34,11 +35,67 @@ function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void })
   );
 }
 
+function HabitIcon({ icon, label }: { icon: string; label: string }) {
+  const ref = React.useRef<HTMLSpanElement | null>(null);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+    setIcon(ref.current, icon);
+  }, [icon]);
+
+  return <span ref={ref} className="smart-notes-habit-icon" title={label} />;
+}
+
+function StatusIcon({ status }: { status: boolean | null }) {
+  const ref = React.useRef<HTMLSpanElement | null>(null);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+
+    if (status === true) {
+      setIcon(ref.current, "square-check-big");
+      const svg = ref.current.querySelector("svg");
+      if (svg) {
+        svg.style.color = "var(--interactive-accent)";
+        svg.style.strokeWidth = "2.2";
+      }
+      return;
+    }
+
+    if (status === false) {
+      setIcon(ref.current, "square");
+      const svg = ref.current.querySelector("svg");
+      if (svg) {
+        svg.style.color = "var(--text-faint)";
+        svg.style.strokeWidth = "1.9";
+      }
+      return;
+    }
+
+    setIcon(ref.current, "minus");
+    const svg = ref.current.querySelector("svg");
+    if (svg) {
+      svg.style.color = "var(--text-faint)";
+      svg.style.strokeWidth = "2";
+    }
+  }, [status]);
+
+  return <span ref={ref} className="smart-notes-status-icon" />;
+}
+
 export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
   const data = useDashboard(app);
+  const habits = useHabitsTracker(app, 7);
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
+  };
+
+  const scoreColor = (value: number): string => {
+    if (value >= 80) return "#5ac080";
+    if (value >= 60) return "#8db452";
+    if (value >= 40) return "#dac05b";
+    return "#da6969";
   };
 
   return (
@@ -113,24 +170,60 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
           )}
         </div>
 
-        <div className="smart-notes-panel">
-          <h2>Pessoas e habitos</h2>
-          <div className="smart-notes-link-list">
-            {data.links
-              .filter((item) =>
-                ["Pessoas", "Journal", "CalendarView"].includes(item.label)
-              )
-              .map((item) => (
-                <button
-                  key={item.label}
-                  className="smart-notes-link-button"
-                  disabled={!item.file}
-                  onClick={() => item.file && openFile(item.file)}
-                >
-                  {item.label}
-                </button>
-              ))}
-          </div>
+        <div className="smart-notes-panel smart-notes-panel-wide">
+          <h2>Hábitos (últimos dias)</h2>
+          {habits.days.length === 0 ? (
+            <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
+          ) : (
+            <div className="smart-notes-habits-wrap">
+              <table className="smart-notes-habits-table">
+                <thead>
+                  <tr>
+                    <th>Dia</th>
+                    <th>%</th>
+                    {habits.rows.map((row) => (
+                      <th key={row.habit.key} className="smart-notes-habit-head" title={row.habit.label}>
+                        <span className="smart-notes-habit-icon-badge">
+                          <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {habits.days.map((day, dayIndex) => {
+                    const statuses = habits.rows.map((row) => row.statuses[dayIndex]);
+                    const filled = statuses.filter((status) => status !== null).length;
+                    const done = statuses.filter((status) => status === true).length;
+                    const completionPercent =
+                      filled === 0 ? 0 : Math.round((done / filled) * 100);
+
+                    return (
+                      <tr key={day.file.path}>
+                        <td className="smart-notes-habit-day">
+                          <button onClick={() => openFile(day.file)}>{day.shortLabel}</button>
+                        </td>
+                        <td
+                          className="smart-notes-habit-score"
+                          style={{ color: scoreColor(completionPercent) }}
+                        >
+                          {completionPercent}%
+                        </td>
+                        {statuses.map((status, statusIndex) => (
+                          <td
+                            key={`${day.file.path}-${habits.rows[statusIndex].habit.key}`}
+                            className="smart-notes-habit-status-cell"
+                          >
+                            <StatusIcon status={status} />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div className="smart-notes-panel">
