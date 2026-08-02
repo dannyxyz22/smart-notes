@@ -1,0 +1,124 @@
+.smart-notes-books-view {
+  padding: 12px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.smart-notes-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.smart-notes-search {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.smart-notes-sort {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.smart-notes-count {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.smart-notes-empty {
+  color: var(--text-muted);
+  padding: 24px 0;
+  text-align: center;
+}
+
+.smart-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.smart-notes-book-card {
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  overflow: hidden;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.smart-notes-book-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.smart-notes-book-cover {
+  aspect-ratio: 2 / 3;
+  background: var(--background-primary-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smart-notes-book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.smart-notes-book-cover-placeholder {
+  font-size: 2.2em;
+  opacity: 0.6;
+}
+
+.smart-notes-book-info {
+  padding: 8px 10px 10px;
+}
+
+.smart-notes-book-title {
+  font-weight: 600;
+  font-size: 0.95em;
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.smart-notes-book-author {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.smart-notes-progress-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.smart-notes-progress-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+}
+
+.smart-notes-stars {
+  color: var(--text-accent);
+  font-size: 0.85em;
+  letter-spacing: 1px;
+}
+
+.smart-notes-book-status {
+  margin-top: 4px;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}

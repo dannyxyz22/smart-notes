@@ -1,0 +1,10 @@
+{
+  "id": "smart-notes",
+  "name": "Smart Notes",
+  "version": "0.1.2",
+  "minAppVersion": "1.4.0",
+  "description": "Exibe uma view React com todas as notas do tipo 'book' do vault, mantendo o Markdown como fonte da verdade.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
