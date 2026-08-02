@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from "obsidian";
 import { BooksItemView, VIEW_TYPE_BOOKS } from "./views/BooksItemView";
 import { HomeItemView, VIEW_TYPE_HOME } from "./views/HomeItemView";
+import { AgendaItemView, VIEW_TYPE_AGENDA } from "./views/AgendaItemView";
 import {
   DEFAULT_ICS_CALENDARS,
   DEFAULT_SETTINGS,
@@ -19,11 +20,16 @@ export default class SmartNotesBooksPlugin extends Plugin {
     );
 
     this.registerView(
+      VIEW_TYPE_AGENDA,
+      (leaf: WorkspaceLeaf) => new AgendaItemView(leaf, () => this.settings)
+    );
+
+    this.registerView(
       VIEW_TYPE_BOOKS,
       (leaf: WorkspaceLeaf) => new BooksItemView(leaf)
     );
 
-    this.addRibbonIcon("layout-dashboard", "Abrir dashboard (Smart Notes)", () => {
+    this.addRibbonIcon("home", "Abrir dashboard (Smart Notes)", () => {
       this.activateHomeView();
     });
 
@@ -31,6 +37,12 @@ export default class SmartNotesBooksPlugin extends Plugin {
       id: "smart-notes-open-home-view",
       name: "Abrir Home dashboard",
       callback: () => this.activateHomeView(),
+    });
+
+    this.addCommand({
+      id: "smart-notes-open-agenda-view",
+      name: "Abrir painel de Agenda",
+      callback: () => this.activateAgendaView(),
     });
 
     this.addCommand({
@@ -44,6 +56,7 @@ export default class SmartNotesBooksPlugin extends Plugin {
     // Aguarda o workspace estar pronto para abrir a Home sem erro de tab group.
     this.app.workspace.onLayoutReady(() => {
       this.activateHomeView();
+      this.activateAgendaView();
     });
   }
 
@@ -54,6 +67,19 @@ export default class SmartNotesBooksPlugin extends Plugin {
 
   private async activateHomeView(): Promise<void> {
     await this.activateViewType(VIEW_TYPE_HOME);
+  }
+
+  private async activateAgendaView(): Promise<void> {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE_AGENDA);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      return;
+    }
+    const leaf = workspace.getRightLeaf(false);
+    if (!leaf) return;
+    await leaf.setViewState({ type: VIEW_TYPE_AGENDA, active: true });
+    workspace.revealLeaf(leaf);
   }
 
   private async activateBooksView(): Promise<void> {
@@ -133,12 +159,11 @@ export default class SmartNotesBooksPlugin extends Plugin {
   }
 
   private refreshHomeViews(): void {
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME);
-    for (const leaf of leaves) {
-      const view = leaf.view;
-      if (view instanceof HomeItemView) {
-        view.refresh();
-      }
+    for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME)) {
+      if (leaf.view instanceof HomeItemView) leaf.view.refresh();
+    }
+    for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_AGENDA)) {
+      if (leaf.view instanceof AgendaItemView) leaf.view.refresh();
     }
   }
 }

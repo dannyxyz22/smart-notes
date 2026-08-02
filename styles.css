@@ -210,6 +210,19 @@
   font-size: 0.82rem;
 }
 
+.smart-notes-agenda-sidebar {
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.smart-notes-agenda-sidebar-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 .smart-notes-agenda-list {
   display: flex;
   flex-direction: column;

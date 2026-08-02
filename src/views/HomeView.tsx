@@ -1,7 +1,6 @@
 import * as React from "react";
 import { App, TFile, WorkspaceLeaf } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
-import { IcsCalendarSource, IcsAgendaEvent, useIcsAgenda } from "../data/useIcsAgenda";
 import { SmartNotesSettings } from "../settings";
 
 interface HomeViewProps {
@@ -9,23 +8,6 @@ interface HomeViewProps {
   settings: SmartNotesSettings;
   leaf: WorkspaceLeaf;
 }
-
-const MONTHS_PT = [
-  "JAN.",
-  "FEV.",
-  "MAR.",
-  "ABR.",
-  "MAI.",
-  "JUN.",
-  "JUL.",
-  "AGO.",
-  "SET.",
-  "OUT.",
-  "NOV.",
-  "DEZ.",
-];
-
-const WEEKDAYS_PT = ["DOM.", "SEG.", "TER.", "QUA.", "QUI.", "SEX.", "SAB."];
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -44,61 +26,6 @@ function formatDateTime(ts: number): string {
   }).format(new Date(ts));
 }
 
-function isTodayDate(date: Date): boolean {
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
-}
-
-function formatAgendaDayLabel(date: Date): string {
-  return `${MONTHS_PT[date.getMonth()]}, ${WEEKDAYS_PT[date.getDay()]}`;
-}
-
-function formatAgendaTime(event: IcsAgendaEvent): string {
-  if (event.allDay) return "Dia todo";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(event.start);
-}
-
-function groupEventsByDay(events: IcsAgendaEvent[]): Array<{ dayKey: string; day: Date; events: IcsAgendaEvent[] }> {
-  const grouped = new Map<string, { day: Date; events: IcsAgendaEvent[] }>();
-
-  for (const event of events) {
-    const keyDate = new Date(
-      event.start.getFullYear(),
-      event.start.getMonth(),
-      event.start.getDate(),
-      0,
-      0,
-      0,
-      0
-    );
-    const key = keyDate.toISOString();
-    const existing = grouped.get(key);
-    if (existing) {
-      existing.events.push(event);
-      continue;
-    }
-
-    grouped.set(key, { day: keyDate, events: [event] });
-  }
-
-  return [...grouped.entries()]
-    .sort((a, b) => a[1].day.getTime() - b[1].day.getTime())
-    .map(([dayKey, value]) => ({
-      dayKey,
-      day: value.day,
-      events: value.events.sort((left, right) => left.start.getTime() - right.start.getTime()),
-    }));
-}
-
 function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void }) {
   return (
     <button className="smart-notes-chip" onClick={() => onOpen(file)}>
@@ -107,18 +34,8 @@ function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void })
   );
 }
 
-function normalizeCalendars(cals: IcsCalendarSource[]): IcsCalendarSource[] {
-  return cals.filter((cal) => cal.name.trim().length > 0 && cal.url.trim().length > 0);
-}
-
-export function HomeView({ app, settings, leaf }: HomeViewProps) {
+export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
   const data = useDashboard(app);
-  const normalizedCalendars = React.useMemo(
-    () => normalizeCalendars(settings.icsCalendars),
-    [settings.icsCalendars]
-  );
-  const agenda = useIcsAgenda(normalizedCalendars, settings.agendaDaysAhead);
-  const dayGroups = groupEventsByDay(agenda.events);
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
@@ -151,61 +68,6 @@ export function HomeView({ app, settings, leaf }: HomeViewProps) {
       </div>
 
       <div className="smart-notes-home-grid">
-        <div className="smart-notes-panel smart-notes-panel-wide">
-          <div className="smart-notes-panel-header-inline">
-            <h2>Agenda (ICS)</h2>
-            <button className="smart-notes-link-button" onClick={agenda.refresh}>
-              Atualizar
-            </button>
-          </div>
-
-          {agenda.loading ? (
-            <p className="smart-notes-muted">Carregando compromissos...</p>
-          ) : dayGroups.length === 0 ? (
-            <p className="smart-notes-muted">
-              Nenhum compromisso encontrado nos proximos dias.
-            </p>
-          ) : (
-            <div className="smart-notes-agenda-list">
-              {dayGroups.map((group) => (
-                <div key={group.dayKey} className="smart-notes-agenda-day">
-                  <div className="smart-notes-agenda-day-header">
-                    <div
-                      className={`smart-notes-agenda-day-num${isTodayDate(group.day) ? " is-today" : ""}`}
-                    >
-                      {group.day.getDate()}
-                    </div>
-                    <div className="smart-notes-agenda-day-label">
-                      {formatAgendaDayLabel(group.day)}
-                    </div>
-                  </div>
-                  <div className="smart-notes-agenda-day-events">
-                    {group.events.map((event) => (
-                      <div key={event.id} className="smart-notes-agenda-item">
-                        <div
-                          className="smart-notes-agenda-dot"
-                          style={{ backgroundColor: event.calendarColor }}
-                        />
-                        <div className="smart-notes-agenda-time">{formatAgendaTime(event)}</div>
-                        <div className="smart-notes-agenda-title">{event.title}</div>
-                        <div className="smart-notes-agenda-calendar">{event.calendarName}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {agenda.errors.length > 0 && (
-            <div className="smart-notes-calendar-help">
-              {agenda.errors.map((error) => (
-                <div key={error}>{error}</div>
-              ))}
-            </div>
-          )}
-        </div>
-
         <div className="smart-notes-panel">
           <h2>Proximos compromissos</h2>
           {data.upcomingTasks.length === 0 ? (
