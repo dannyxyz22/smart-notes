@@ -45,8 +45,10 @@ export default class SmartNotesBooksPlugin extends Plugin {
 
     this.addSettingTab(new SmartNotesSettingTab(this.app, this));
 
-    // Deixa a Home pronta como ponto de entrada do plugin.
-    await this.activateHomeView();
+    // Aguarda o workspace estar pronto para abrir a Home sem erro de tab group.
+    this.app.workspace.onLayoutReady(() => {
+      this.activateHomeView();
+    });
   }
 
   onunload(): void {
@@ -71,7 +73,7 @@ export default class SmartNotesBooksPlugin extends Plugin {
       return;
     }
 
-    const leaf = workspace.getLeaf("tab");
+    const leaf = workspace.getLeaf("tab") ?? workspace.getLeaf();
     await leaf.setViewState({ type: viewType, active: true });
     workspace.revealLeaf(leaf);
   }

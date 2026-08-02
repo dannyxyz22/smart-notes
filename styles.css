@@ -127,6 +127,8 @@
   padding: 16px;
   height: 100%;
   overflow-y: auto;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .smart-notes-home-header {
@@ -198,22 +200,8 @@
   margin-bottom: 8px;
 }
 
-.smart-notes-inline-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .smart-notes-panel-header-inline h2 {
   margin: 0;
-}
-
-.smart-notes-calendar-embed {
-  width: 100%;
-  min-height: 560px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  background: var(--background-primary);
 }
 
 .smart-notes-calendar-help {
@@ -222,69 +210,105 @@
   font-size: 0.82rem;
 }
 
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--background-primary);
+.smart-notes-agenda-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.smart-notes-agenda-day + .smart-notes-agenda-day {
+  border-top: 1px solid var(--background-modifier-border);
 }
 
 .smart-notes-agenda-day-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 4px 6px;
+}
+
+.smart-notes-agenda-day-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
   font-weight: 700;
+  color: var(--text-normal);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.smart-notes-agenda-day-num.is-today {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.smart-notes-agenda-day-label {
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-accent);
-  background: var(--background-secondary);
-  border-bottom: 1px solid var(--background-modifier-border);
-  padding: 8px 12px;
+  color: var(--text-muted);
 }
 
 .smart-notes-agenda-day-events {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
 }
 
 .smart-notes-agenda-item {
   display: grid;
-  grid-template-columns: 10px 72px 1fr auto;
-  gap: 10px;
+  grid-template-columns: 10px 64px 1fr auto;
+  gap: 12px;
   align-items: center;
-  padding: 10px 12px;
-  border-top: 1px solid var(--background-modifier-border);
-}
-
-.smart-notes-agenda-item:first-child {
-  border-top: 0;
+  padding: 5px 4px 5px 0;
 }
 
 .smart-notes-agenda-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .smart-notes-agenda-time {
   font-variant-numeric: tabular-nums;
-  color: var(--text-normal);
-  font-weight: 500;
+  font-size: 0.82rem;
+  color: var(--text-muted);
 }
 
 .smart-notes-agenda-title {
-  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
 }
 
 .smart-notes-agenda-calendar {
-  color: var(--text-muted);
-  font-size: 0.78rem;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {
   .smart-notes-agenda-item {
-    grid-template-columns: 10px 62px 1fr;
+    grid-template-columns: 10px 58px 1fr;
   }
 
   .smart-notes-agenda-calendar {
     display: none;
   }
 }
+
+.smart-notes-list li button,
+.smart-notes-link-button,
+.smart-notes-chip {
+  border: 0;
   background: transparent;
   color: var(--text-accent);
   text-align: left;

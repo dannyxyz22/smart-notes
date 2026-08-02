@@ -1,5 +1,5 @@
 import * as React from "react";
-import { App, TFile } from "obsidian";
+import { App, TFile, WorkspaceLeaf } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
 import { IcsCalendarSource, IcsAgendaEvent, useIcsAgenda } from "../data/useIcsAgenda";
 import { SmartNotesSettings } from "../settings";
@@ -7,6 +7,7 @@ import { SmartNotesSettings } from "../settings";
 interface HomeViewProps {
   app: App;
   settings: SmartNotesSettings;
+  leaf: WorkspaceLeaf;
 }
 
 const MONTHS_PT = [
@@ -43,11 +44,17 @@ function formatDateTime(ts: number): string {
   }).format(new Date(ts));
 }
 
-function formatAgendaDay(date: Date): string {
-  const day = date.getDate();
-  const month = MONTHS_PT[date.getMonth()];
-  const weekDay = WEEKDAYS_PT[date.getDay()];
-  return `${day} ${month}, ${weekDay}`;
+function isTodayDate(date: Date): boolean {
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+function formatAgendaDayLabel(date: Date): string {
+  return `${MONTHS_PT[date.getMonth()]}, ${WEEKDAYS_PT[date.getDay()]}`;
 }
 
 function formatAgendaTime(event: IcsAgendaEvent): string {
@@ -104,7 +111,7 @@ function normalizeCalendars(cals: IcsCalendarSource[]): IcsCalendarSource[] {
   return cals.filter((cal) => cal.name.trim().length > 0 && cal.url.trim().length > 0);
 }
 
-export function HomeView({ app, settings }: HomeViewProps) {
+export function HomeView({ app, settings, leaf }: HomeViewProps) {
   const data = useDashboard(app);
   const normalizedCalendars = React.useMemo(
     () => normalizeCalendars(settings.icsCalendars),
@@ -114,37 +121,37 @@ export function HomeView({ app, settings }: HomeViewProps) {
   const dayGroups = groupEventsByDay(agenda.events);
 
   const openFile = (file: TFile) => {
-    app.workspace.getLeaf(false).openFile(file);
+    leaf.openFile(file);
   };
 
   return (
     <div className="smart-notes-home-view">
-      <header className="smart-notes-home-header">
+      <div className="smart-notes-home-header">
         <h1>Smart Notes Home</h1>
         <p>Dashboard do vault inspirado no Home.md, agora como plugin.</p>
-      </header>
+      </div>
 
-      <section className="smart-notes-home-stats">
-        <article className="smart-notes-stat-card">
+      <div className="smart-notes-home-stats">
+        <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Livros</div>
           <div className="smart-notes-stat-value">{data.books.length}</div>
-        </article>
-        <article className="smart-notes-stat-card">
+        </div>
+        <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Tarefas abertas</div>
           <div className="smart-notes-stat-value">{data.openTasks.length}</div>
-        </article>
-        <article className="smart-notes-stat-card">
+        </div>
+        <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Finalizadas hoje</div>
           <div className="smart-notes-stat-value">{data.completedToday.length}</div>
-        </article>
-        <article className="smart-notes-stat-card">
+        </div>
+        <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Inbox</div>
           <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
-        </article>
-      </section>
+        </div>
+      </div>
 
-      <section className="smart-notes-home-grid">
-        <article className="smart-notes-panel smart-notes-panel-wide">
+      <div className="smart-notes-home-grid">
+        <div className="smart-notes-panel smart-notes-panel-wide">
           <div className="smart-notes-panel-header-inline">
             <h2>Agenda (ICS)</h2>
             <button className="smart-notes-link-button" onClick={agenda.refresh}>
@@ -161,13 +168,20 @@ export function HomeView({ app, settings }: HomeViewProps) {
           ) : (
             <div className="smart-notes-agenda-list">
               {dayGroups.map((group) => (
-                <section key={group.dayKey} className="smart-notes-agenda-day">
-                  <header className="smart-notes-agenda-day-header">
-                    {formatAgendaDay(group.day)}
-                  </header>
+                <div key={group.dayKey} className="smart-notes-agenda-day">
+                  <div className="smart-notes-agenda-day-header">
+                    <div
+                      className={`smart-notes-agenda-day-num${isTodayDate(group.day) ? " is-today" : ""}`}
+                    >
+                      {group.day.getDate()}
+                    </div>
+                    <div className="smart-notes-agenda-day-label">
+                      {formatAgendaDayLabel(group.day)}
+                    </div>
+                  </div>
                   <div className="smart-notes-agenda-day-events">
                     {group.events.map((event) => (
-                      <article key={event.id} className="smart-notes-agenda-item">
+                      <div key={event.id} className="smart-notes-agenda-item">
                         <div
                           className="smart-notes-agenda-dot"
                           style={{ backgroundColor: event.calendarColor }}
@@ -175,10 +189,10 @@ export function HomeView({ app, settings }: HomeViewProps) {
                         <div className="smart-notes-agenda-time">{formatAgendaTime(event)}</div>
                         <div className="smart-notes-agenda-title">{event.title}</div>
                         <div className="smart-notes-agenda-calendar">{event.calendarName}</div>
-                      </article>
+                      </div>
                     ))}
                   </div>
-                </section>
+                </div>
               ))}
             </div>
           )}
@@ -190,9 +204,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
               ))}
             </div>
           )}
-        </article>
+        </div>
 
-        <article className="smart-notes-panel">
+        <div className="smart-notes-panel">
           <h2>Proximos compromissos</h2>
           {data.upcomingTasks.length === 0 ? (
             <p className="smart-notes-muted">Sem compromissos futuros com Do date.</p>
@@ -206,9 +220,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
               ))}
             </ul>
           )}
-        </article>
+        </div>
 
-        <article className="smart-notes-panel">
+        <div className="smart-notes-panel">
           <h2>Finalizadas hoje</h2>
           {data.completedToday.length === 0 ? (
             <p className="smart-notes-muted">Nenhuma tarefa finalizada hoje ainda.</p>
@@ -222,9 +236,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
               ))}
             </ul>
           )}
-        </article>
+        </div>
 
-        <article className="smart-notes-panel smart-notes-panel-wide">
+        <div className="smart-notes-panel smart-notes-panel-wide">
           <h2>Inbox e triagem rapida</h2>
           {data.inboxNotes.length === 0 ? (
             <p className="smart-notes-muted">A pasta inbox esta vazia.</p>
@@ -235,9 +249,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
               ))}
             </div>
           )}
-        </article>
+        </div>
 
-        <article className="smart-notes-panel">
+        <div className="smart-notes-panel">
           <h2>Pessoas e habitos</h2>
           <div className="smart-notes-link-list">
             {data.links
@@ -255,9 +269,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
                 </button>
               ))}
           </div>
-        </article>
+        </div>
 
-        <article className="smart-notes-panel">
+        <div className="smart-notes-panel">
           <h2>Livros</h2>
           <div className="smart-notes-link-list">
             {data.links
@@ -277,9 +291,9 @@ export function HomeView({ app, settings }: HomeViewProps) {
                 </button>
               ))}
           </div>
-        </article>
+        </div>
 
-        <article className="smart-notes-panel smart-notes-panel-wide">
+        <div className="smart-notes-panel smart-notes-panel-wide">
           <h2>Notas recentes</h2>
           <ul className="smart-notes-list">
             {data.recentNotes.map((note) => (
@@ -289,8 +303,8 @@ export function HomeView({ app, settings }: HomeViewProps) {
               </li>
             ))}
           </ul>
-        </article>
-      </section>
+        </div>
+      </div>
     </div>
   );
 }

@@ -43,6 +43,6 @@ export class HomeItemView extends ItemView {
 
   private renderView(): void {
     if (!this.root) return;
-    this.root.render(<HomeView app={this.app} settings={this.getSettings()} />);
+    this.root.render(<HomeView app={this.app} settings={this.getSettings()} leaf={this.leaf} />);
   }
 }
