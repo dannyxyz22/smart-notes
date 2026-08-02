@@ -35,6 +35,14 @@ function todayJournalKey(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function isSameDay(left: Date, right: Date): boolean {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+}
+
 function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void }) {
   return (
     <button className="smart-notes-chip" onClick={() => onOpen(file)}>
@@ -148,7 +156,7 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
         </div>
       </div>
 
-      <div className="smart-notes-panel smart-notes-panel-wide">
+      <div className="smart-notes-panel smart-notes-panel-wide smart-notes-habits-panel">
         <h2>Hábitos (últimos dias)</h2>
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
@@ -227,15 +235,23 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
             <span>Tarefas</span>
           </h2>
           {visibleUpcomingTasks.length === 0 ? (
-            <p className="smart-notes-muted">Sem compromissos para hoje ou próximos dias.</p>
+            <p className="smart-notes-muted">Sem tarefas abertas com Do date.</p>
           ) : (
             <ul className="smart-notes-list">
-              {visibleUpcomingTasks.map((task) => (
-                <li key={task.file.path}>
+              {visibleUpcomingTasks.map((task) => {
+                const isTodayTask = task.dueDate ? isSameDay(task.dueDate, new Date()) : false;
+
+                return (
+                <li
+                  key={task.file.path}
+                  className={isTodayTask ? "smart-notes-task-today" : undefined}
+                >
                   <button onClick={() => openFile(task.file)}>{task.title}</button>
-                  <span>{task.dueDate ? formatDate(task.dueDate) : "-"}</span>
+                  <span className={isTodayTask ? "smart-notes-task-today-date" : undefined}>
+                    {task.dueDate ? formatDate(task.dueDate) : "-"}
+                  </span>
                 </li>
-              ))}
+              );})}
             </ul>
           )}
           {hiddenUpcomingCount > 0 ? (

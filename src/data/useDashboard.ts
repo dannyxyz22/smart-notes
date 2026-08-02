@@ -159,7 +159,6 @@ function isInboxPath(path: string): boolean {
 
 function computeDashboard(app: App): DashboardData {
   const now = new Date();
-  const todayStart = startOfDay(now);
   const markdownFiles = app.vault.getMarkdownFiles();
   const books: BookRecord[] = [];
   const tasks: DashboardTask[] = [];
@@ -192,10 +191,7 @@ function computeDashboard(app: App): DashboardData {
   });
 
   const upcomingTasks = [...openTasks]
-    .filter(
-      (task) =>
-        task.dueDate && startOfDay(task.dueDate).getTime() >= todayStart.getTime()
-    )
+    .filter((task) => task.dueDate)
     .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0));
 
   const recentNotes = [...markdownFiles]

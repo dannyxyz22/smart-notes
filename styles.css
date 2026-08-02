@@ -201,6 +201,10 @@
   padding: 10px;
 }
 
+.smart-notes-habits-panel {
+  margin-bottom: 8px;
+}
+
 .smart-notes-panel-wide {
   grid-column: 1 / -1;
 }
@@ -378,6 +382,13 @@
   gap: 8px;
 }
 
+.smart-notes-list li.smart-notes-task-today {
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  border-left: 2px solid var(--interactive-accent);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
 .smart-notes-list li + li {
   margin-top: 6px;
 }
@@ -414,6 +425,11 @@
   font-size: 0.8rem;
   white-space: nowrap;
   justify-self: end;
+}
+
+.smart-notes-list li .smart-notes-task-today-date {
+  color: var(--interactive-accent);
+  font-weight: 700;
 }
 
 .smart-notes-muted {
