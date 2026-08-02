@@ -79,6 +79,11 @@ export default class SmartNotesBooksPlugin extends Plugin {
   }
 
   async saveSettings(): Promise<void> {
+    // Cria nova referência de array para que useMemo em HomeView detecte a mudança.
+    this.settings = {
+      ...this.settings,
+      icsCalendars: this.settings.icsCalendars.map((cal) => ({ ...cal })),
+    };
     await this.saveData(this.settings);
     this.refreshHomeViews();
   }
@@ -104,11 +109,15 @@ export default class SmartNotesBooksPlugin extends Plugin {
   }
 
   private normalizeCalendars(value: unknown): SmartNotesSettings["icsCalendars"] {
-    if (!Array.isArray(value)) {
+    // Primeira instalação: ainda sem data.json salvo.
+    if (value === null || value === undefined) {
       return DEFAULT_ICS_CALENDARS.map((item) => ({ ...item }));
     }
+    if (!Array.isArray(value)) {
+      return [];
+    }
 
-    const parsed = value
+    return value
       .map((entry) => {
         if (!entry || typeof entry !== "object") return null;
         const source = entry as Record<string, unknown>;
@@ -116,20 +125,15 @@ export default class SmartNotesBooksPlugin extends Plugin {
         const url = typeof source.url === "string" ? source.url.trim() : "";
         const colorRaw = typeof source.color === "string" ? source.color.trim() : "";
 
-        if (!name || !url) return null;
+        // Descarta entradas completamente vazias (nome E url ausentes).
+        if (!name && !url) return null;
 
-        const color = /^#[0-9a-fA-F]{6}$/.test(colorRaw) ? colorRaw : "#009688";
+        const color = /^#[0-9a-fA-F]{6}$/.test(colorRaw) ? colorRaw : "#039BE5";
         return { name, url, color };
       })
       .filter((item): item is SmartNotesSettings["icsCalendars"][number] =>
         Boolean(item)
       );
-
-    if (parsed.length === 0) {
-      return DEFAULT_ICS_CALENDARS.map((item) => ({ ...item }));
-    }
-
-    return parsed;
   }
 
   private refreshHomeViews(): void {
