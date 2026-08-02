@@ -223,8 +223,9 @@ export function HomeView({
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
         ) : (
-          <div className="smart-notes-habits-wrap">
-            <table className="smart-notes-habits-table">
+          <>
+            <div className="smart-notes-habits-wrap smart-notes-habits-desktop">
+              <table className="smart-notes-habits-table">
               <thead>
                 <tr>
                   <th>Dia</th>
@@ -285,8 +286,70 @@ export function HomeView({
                   );
                 })}
               </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
+
+            <div className="smart-notes-habits-mobile-wrap">
+              <table className="smart-notes-habits-mobile-table">
+                <thead>
+                  <tr>
+                    <th className="smart-notes-habits-mobile-corner" />
+                    {habits.days.map((day) => {
+                      const isToday = day.file.basename === todayKey;
+                      return (
+                        <th
+                          key={day.file.path}
+                          className={`smart-notes-habit-mobile-date-head${isToday ? " is-today" : ""}`}
+                          title={day.file.basename}
+                        >
+                          <button type="button" onClick={() => openFile(day.file)}>
+                            {day.shortLabel}
+                          </button>
+                        </th>
+                      );
+                    })}
+                    <th className="smart-notes-habit-mobile-percent-head">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {habits.rows.map((row) => (
+                    <tr key={row.habit.key}>
+                      <td className="smart-notes-habit-mobile-icon-cell" title={row.habit.label}>
+                        <span className="smart-notes-habit-icon-badge">
+                          <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                        </span>
+                      </td>
+                      {habits.days.map((day, dayIndex) => {
+                        const isToday = day.file.basename === todayKey;
+                        const status = row.statuses[dayIndex];
+                        return (
+                          <td
+                            key={`${row.habit.key}-${day.file.path}`}
+                            className={`smart-notes-habit-mobile-status-cell${isToday ? " is-today" : ""}`}
+                          >
+                            <button
+                              type="button"
+                              className="smart-notes-habit-mobile-toggle"
+                              title={`Alternar ${row.habit.label} em ${day.shortLabel}`}
+                              onClick={() => habits.toggleStatus(day.file, row.habit.key)}
+                            >
+                              <StatusIcon status={status} />
+                            </button>
+                          </td>
+                        );
+                      })}
+                      <td
+                        className="smart-notes-habit-mobile-percent"
+                        style={{ color: scoreColor(row.completionPercent) }}
+                      >
+                        {row.completionPercent}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 import { requestUrl } from "obsidian";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RRule } from "rrule";
 
 export interface IcsCalendarSource {
@@ -24,6 +24,8 @@ export interface IcsAgendaState {
   errors: string[];
   refresh: () => void;
 }
+
+const AGENDA_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 interface ParsedDate {
   date: Date;
@@ -275,6 +277,30 @@ async function fetchCalendar(
   }
 }
 
+function agendaEventSignature(event: IcsAgendaEvent): string {
+  return [
+    event.id,
+    event.title,
+    event.start.getTime(),
+    event.end.getTime(),
+    event.allDay ? "1" : "0",
+    event.calendarName,
+    event.calendarColor,
+  ].join("|");
+}
+
+function sameAgendaEvents(left: IcsAgendaEvent[], right: IcsAgendaEvent[]): boolean {
+  if (left.length !== right.length) return false;
+
+  for (let index = 0; index < left.length; index += 1) {
+    if (agendaEventSignature(left[index]) !== agendaEventSignature(right[index])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function useIcsAgenda(
   sources: IcsCalendarSource[],
   daysAhead = 21
@@ -282,13 +308,12 @@ export function useIcsAgenda(
   const [events, setEvents] = useState<IcsAgendaEvent[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const eventsRef = useRef<IcsAgendaEvent[]>([]);
 
   const refresh = useCallback(() => {
     let cancelled = false;
 
     const load = async () => {
-      setLoading(true);
-
       const now = new Date();
       const rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
       const rangeEnd = new Date(rangeStart.getTime() + daysAhead * 24 * 60 * 60 * 1000);
@@ -307,9 +332,17 @@ export function useIcsAgenda(
         .map((entry) => entry.error)
         .filter((error): error is string => Boolean(error));
 
-      setEvents(merged);
-      setErrors(collectedErrors);
-      setLoading(false);
+      const eventsChanged = !sameAgendaEvents(eventsRef.current, merged);
+
+      if (eventsChanged) {
+        eventsRef.current = merged;
+        setEvents(merged);
+        setErrors(collectedErrors);
+      }
+
+      if (loading) {
+        setLoading(false);
+      }
     };
 
     load();
@@ -321,7 +354,14 @@ export function useIcsAgenda(
 
   useEffect(() => {
     const cancel = refresh();
-    return cancel;
+    const intervalId = window.setInterval(() => {
+      refresh();
+    }, AGENDA_REFRESH_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+      cancel();
+    };
   }, [refresh]);
 
   return { events, loading, errors, refresh };

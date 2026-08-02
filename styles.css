@@ -652,6 +652,10 @@
   overflow-x: auto;
 }
 
+.smart-notes-habits-mobile {
+  display: none;
+}
+
 .smart-notes-habits-table {
   width: 100%;
   border-collapse: collapse;
@@ -810,4 +814,121 @@
 
 .smart-notes-habit-score {
   font-weight: 700;
+}
+
+.smart-notes-habits-mobile-wrap {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .smart-notes-habits-desktop {
+    display: none;
+  }
+
+  .smart-notes-habits-mobile {
+    display: block;
+  }
+
+  .smart-notes-habits-mobile-wrap {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .smart-notes-habits-mobile-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+  }
+
+  .smart-notes-habits-mobile-table th,
+  .smart-notes-habits-mobile-table td {
+    border-bottom: 1px solid var(--background-modifier-border);
+    border-right: 1px solid var(--background-modifier-border);
+    padding: 4px 5px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .smart-notes-habits-mobile-table th:first-child,
+  .smart-notes-habits-mobile-table td:first-child {
+    border-left: 1px solid var(--background-modifier-border);
+  }
+
+  .smart-notes-habits-mobile-table thead th {
+    font-weight: 700;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--background-secondary) 72%, var(--background-primary));
+  }
+
+  .smart-notes-habits-mobile-corner {
+    width: 26px;
+  }
+
+  .smart-notes-habit-mobile-date-head button {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-accent);
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .smart-notes-habit-mobile-date-head.is-today {
+    color: var(--interactive-accent);
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+  }
+
+  .smart-notes-habit-mobile-icon-cell {
+    width: 26px;
+    background: color-mix(in srgb, var(--background-secondary) 78%, var(--background-primary));
+  }
+
+  .smart-notes-habit-mobile-status-cell {
+    padding: 2px 4px;
+  }
+
+  .smart-notes-habit-mobile-status-cell.is-today {
+    background: color-mix(in srgb, var(--interactive-accent) 6%, var(--background-primary));
+  }
+
+  .smart-notes-habit-mobile-toggle {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .smart-notes-habit-mobile-toggle .smart-notes-status-icon,
+  .smart-notes-habit-mobile-toggle .smart-notes-status-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .smart-notes-habit-mobile-percent-head,
+  .smart-notes-habit-mobile-percent {
+    width: 34px;
+    font-weight: 700;
+  }
+
+  .smart-notes-habit-mobile-percent {
+    font-size: 0.72rem;
+  }
+
+  .smart-notes-habits-mobile-table .smart-notes-habit-icon-badge {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+  }
+
+  .smart-notes-habits-mobile-table .smart-notes-habit-icon,
+  .smart-notes-habits-mobile-table .smart-notes-habit-icon svg {
+    width: 11px;
+    height: 11px;
+  }
 }
