@@ -137,7 +137,7 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
         <div className="smart-notes-panel">
           <h2>Proximos compromissos</h2>
           {data.upcomingTasks.length === 0 ? (
-            <p className="smart-notes-muted">Sem compromissos futuros com Do date.</p>
+            <p className="smart-notes-muted">Sem compromissos para hoje ou próximos dias.</p>
           ) : (
             <ul className="smart-notes-list">
               {data.upcomingTasks.map((task) => (
@@ -148,6 +148,20 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
               ))}
             </ul>
           )}
+          <div className="smart-notes-calendar-link-wrap">
+            {data.links
+              .filter((item) => item.label === "CalendarView")
+              .map((item) => (
+                <button
+                  key={item.label}
+                  className="smart-notes-link-button"
+                  disabled={!item.file}
+                  onClick={() => item.file && openFile(item.file)}
+                >
+                  CalendarView
+                </button>
+              ))}
+          </div>
         </div>
 
         <div className="smart-notes-panel">

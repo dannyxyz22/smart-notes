@@ -58,6 +58,10 @@ function isSameDay(left: Date, right: Date): boolean {
   );
 }
 
+function startOfDay(value: Date): Date {
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
+
 function toDate(value: unknown): Date | undefined {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? undefined : value;
@@ -67,8 +71,32 @@ function toDate(value: unknown): Date | undefined {
     return Number.isNaN(fromNumber.getTime()) ? undefined : fromNumber;
   }
   if (typeof value === "string") {
+    // Treat YYYY-MM-DD as a local date to avoid UTC timezone shift.
+    const dateOnly = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) {
+      const year = Number(dateOnly[1]);
+      const monthIndex = Number(dateOnly[2]) - 1;
+      const day = Number(dateOnly[3]);
+      const localDate = new Date(year, monthIndex, day);
+      return Number.isNaN(localDate.getTime()) ? undefined : localDate;
+    }
+
     const fromString = new Date(value);
     return Number.isNaN(fromString.getTime()) ? undefined : fromString;
+  }
+  if (value && typeof value === "object") {
+    const asRecord = value as Record<string, unknown>;
+    const year = asRecord.year;
+    const month = asRecord.month;
+    const day = asRecord.day;
+    if (
+      typeof year === "number" &&
+      typeof month === "number" &&
+      typeof day === "number"
+    ) {
+      const fromParts = new Date(year, month - 1, day);
+      return Number.isNaN(fromParts.getTime()) ? undefined : fromParts;
+    }
   }
   return undefined;
 }
@@ -131,6 +159,7 @@ function isInboxPath(path: string): boolean {
 
 function computeDashboard(app: App): DashboardData {
   const now = new Date();
+  const todayStart = startOfDay(now);
   const markdownFiles = app.vault.getMarkdownFiles();
   const books: BookRecord[] = [];
   const tasks: DashboardTask[] = [];
@@ -160,7 +189,10 @@ function computeDashboard(app: App): DashboardData {
   });
 
   const upcomingTasks = [...openTasks]
-    .filter((task) => task.dueDate && task.dueDate.getTime() >= now.getTime())
+    .filter(
+      (task) =>
+        task.dueDate && startOfDay(task.dueDate).getTime() >= todayStart.getTime()
+    )
     .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0))
     .slice(0, 6);
 
