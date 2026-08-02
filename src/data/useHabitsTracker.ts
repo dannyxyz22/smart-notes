@@ -21,7 +21,10 @@ export interface HabitRow {
 export interface HabitsTrackerData {
   days: HabitDay[];
   rows: HabitRow[];
+  toggleStatus: (dayFile: TFile, habitKey: string) => Promise<void>;
 }
+
+type HabitsTrackerSnapshot = Omit<HabitsTrackerData, "toggleStatus">;
 
 const HABITS: HabitDef[] = [
   { key: "oracao_matinal", label: "Oração matinal", icon: "sunrise" },
@@ -70,7 +73,7 @@ function journalDateKey(file: TFile): string | null {
   return `${match[1]}-${match[2]}-${match[3]}`;
 }
 
-function computeTracker(app: App, daysToShow: number): HabitsTrackerData {
+function computeTracker(app: App, daysToShow: number): HabitsTrackerSnapshot {
   const maxDate = todayKey();
 
   const days = app.vault
@@ -103,13 +106,29 @@ function computeTracker(app: App, daysToShow: number): HabitsTrackerData {
 }
 
 export function useHabitsTracker(app: App, daysToShow = 7): HabitsTrackerData {
-  const [data, setData] = useState<HabitsTrackerData>(() =>
+  const [data, setData] = useState<HabitsTrackerSnapshot>(() =>
     computeTracker(app, daysToShow)
   );
 
   const refresh = useCallback(() => {
     setData(computeTracker(app, daysToShow));
   }, [app, daysToShow]);
+
+  const toggleStatus = useCallback(
+    async (dayFile: TFile, habitKey: string) => {
+      const cache = app.metadataCache.getFileCache(dayFile);
+      const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+      const current = parseStatus(fm?.[habitKey]);
+      const next = current === true ? false : true;
+
+      await app.fileManager.processFrontMatter(dayFile, (frontmatter) => {
+        frontmatter[habitKey] = next;
+      });
+
+      refresh();
+    },
+    [app, refresh]
+  );
 
   useEffect(() => {
     refresh();
@@ -132,5 +151,8 @@ export function useHabitsTracker(app: App, daysToShow = 7): HabitsTrackerData {
     };
   }, [app, refresh]);
 
-  return data;
+  return {
+    ...data,
+    toggleStatus,
+  };
 }

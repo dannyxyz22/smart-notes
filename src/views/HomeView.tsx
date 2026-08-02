@@ -214,7 +214,19 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
                             key={`${day.file.path}-${habits.rows[statusIndex].habit.key}`}
                             className="smart-notes-habit-status-cell"
                           >
-                            <StatusIcon status={status} />
+                            <button
+                              type="button"
+                              className="smart-notes-habit-status-button"
+                              title={`Alternar ${habits.rows[statusIndex].habit.label}`}
+                              onClick={() =>
+                                habits.toggleStatus(
+                                  day.file,
+                                  habits.rows[statusIndex].habit.key
+                                )
+                              }
+                            >
+                              <StatusIcon status={status} />
+                            </button>
                           </td>
                         ))}
                       </tr>
