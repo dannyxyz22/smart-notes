@@ -2,28 +2,12 @@ import * as React from "react";
 import { App, TFile } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
 import { IcsCalendarSource, IcsAgendaEvent, useIcsAgenda } from "../data/useIcsAgenda";
+import { SmartNotesSettings } from "../settings";
 
 interface HomeViewProps {
   app: App;
+  settings: SmartNotesSettings;
 }
-
-const ICS_CALENDARS: IcsCalendarSource[] = [
-  {
-    name: "Festas Liturgicas",
-    color: "#009688",
-    url: "https://calendar.google.com/calendar/ical/3a194e97711b897898b06edf7fdb3d78c19327ef94f319ec862a64a33cdf7683%40group.calendar.google.com/private-a02f0462dde22763de7c41ffa04debe7/basic.ics",
-  },
-  {
-    name: "Pessoal",
-    color: "#8E24AA",
-    url: "https://calendar.google.com/calendar/ical/danielbaggio%40gmail.com/private-c0ce49e420ce88248880bb0fed53b312/basic.ics",
-  },
-  {
-    name: "Rotina",
-    color: "#AD1457",
-    url: "https://calendar.google.com/calendar/ical/rg5kcagjemkup9r51t9fis1qqs%40group.calendar.google.com/private-7868129cfbea485e89c90afbf8a437fa/basic.ics",
-  },
-];
 
 const MONTHS_PT = [
   "JAN.",
@@ -116,9 +100,17 @@ function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void })
   );
 }
 
-export function HomeView({ app }: HomeViewProps) {
+function normalizeCalendars(cals: IcsCalendarSource[]): IcsCalendarSource[] {
+  return cals.filter((cal) => cal.name.trim().length > 0 && cal.url.trim().length > 0);
+}
+
+export function HomeView({ app, settings }: HomeViewProps) {
   const data = useDashboard(app);
-  const agenda = useIcsAgenda(ICS_CALENDARS, 21);
+  const normalizedCalendars = React.useMemo(
+    () => normalizeCalendars(settings.icsCalendars),
+    [settings.icsCalendars]
+  );
+  const agenda = useIcsAgenda(normalizedCalendars, settings.agendaDaysAhead);
   const dayGroups = groupEventsByDay(agenda.events);
 
   const openFile = (file: TFile) => {
