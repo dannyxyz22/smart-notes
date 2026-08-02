@@ -122,3 +122,214 @@
   letter-spacing: 0.04em;
   color: var(--text-faint);
 }
+
+.smart-notes-home-view {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.smart-notes-home-header {
+  margin-bottom: 14px;
+}
+
+.smart-notes-home-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.smart-notes-home-header p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+}
+
+.smart-notes-home-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.smart-notes-stat-card {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  padding: 10px;
+}
+
+.smart-notes-stat-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.smart-notes-stat-value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+.smart-notes-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.smart-notes-panel {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  padding: 10px;
+}
+
+.smart-notes-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.smart-notes-panel h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.smart-notes-panel-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.smart-notes-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.smart-notes-panel-header-inline h2 {
+  margin: 0;
+}
+
+.smart-notes-calendar-embed {
+  width: 100%;
+  min-height: 560px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+}
+
+.smart-notes-calendar-help {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--background-primary);
+}
+
+.smart-notes-agenda-day-header {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding: 8px 12px;
+}
+
+.smart-notes-agenda-day-events {
+  display: grid;
+}
+
+.smart-notes-agenda-item {
+  display: grid;
+  grid-template-columns: 10px 72px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.smart-notes-agenda-item:first-child {
+  border-top: 0;
+}
+
+.smart-notes-agenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.smart-notes-agenda-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+.smart-notes-agenda-title {
+  font-weight: 600;
+}
+
+.smart-notes-agenda-calendar {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 720px) {
+  .smart-notes-agenda-item {
+    grid-template-columns: 10px 62px 1fr;
+  }
+
+  .smart-notes-agenda-calendar {
+    display: none;
+  }
+}
+  background: transparent;
+  color: var(--text-accent);
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.smart-notes-list li button:hover,
+.smart-notes-link-button:hover,
+.smart-notes-chip:hover {
+  text-decoration: underline;
+}
+
+.smart-notes-list li span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.smart-notes-muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.smart-notes-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.smart-notes-link-button:disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.smart-notes-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.smart-notes-chip {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--background-primary);
+}
