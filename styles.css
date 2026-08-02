@@ -124,11 +124,19 @@
 }
 
 .smart-notes-home-view {
+  --smart-notes-warm-1: #f7b267;
+  --smart-notes-warm-2: #f4845f;
+  --smart-notes-warm-3: #84dcc6;
+  --smart-notes-warm-4: #b8c0ff;
   padding: 16px;
   height: 100%;
   overflow-y: auto;
   user-select: text;
   -webkit-user-select: text;
+  background:
+    radial-gradient(1200px 380px at -10% -20%, color-mix(in srgb, var(--smart-notes-warm-1) 22%, transparent), transparent 70%),
+    radial-gradient(900px 320px at 105% -10%, color-mix(in srgb, var(--smart-notes-warm-3) 18%, transparent), transparent 72%),
+    var(--background-primary);
 }
 
 .smart-notes-home-header {
@@ -173,8 +181,29 @@
 .smart-notes-stat-card {
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
-  background: var(--background-secondary);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--background-secondary) 92%, var(--background-primary)),
+    color-mix(in srgb, var(--background-secondary) 82%, var(--interactive-accent))
+  );
   padding: 10px;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--background-primary) 84%, transparent);
+}
+
+.smart-notes-home-stats .smart-notes-stat-card:nth-child(1) {
+  border-color: color-mix(in srgb, var(--smart-notes-warm-1) 48%, var(--background-modifier-border));
+}
+
+.smart-notes-home-stats .smart-notes-stat-card:nth-child(2) {
+  border-color: color-mix(in srgb, var(--smart-notes-warm-2) 44%, var(--background-modifier-border));
+}
+
+.smart-notes-home-stats .smart-notes-stat-card:nth-child(3) {
+  border-color: color-mix(in srgb, var(--smart-notes-warm-3) 46%, var(--background-modifier-border));
+}
+
+.smart-notes-home-stats .smart-notes-stat-card:nth-child(4) {
+  border-color: color-mix(in srgb, var(--smart-notes-warm-4) 44%, var(--background-modifier-border));
 }
 
 .smart-notes-stat-label {
@@ -197,8 +226,80 @@
 .smart-notes-panel {
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
-  background: var(--background-secondary);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--background-secondary) 92%, var(--background-primary)),
+    color-mix(in srgb, var(--background-secondary) 86%, var(--background-primary-alt))
+  );
   padding: 10px;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--background-primary) 85%, transparent);
+}
+
+.smart-notes-home-grid .smart-notes-panel,
+.smart-notes-habits-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.smart-notes-home-grid .smart-notes-panel::before,
+.smart-notes-habits-panel::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--interactive-accent) 48%, transparent);
+  pointer-events: none;
+}
+
+.smart-notes-habits-panel::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--smart-notes-warm-1) 72%, transparent),
+    color-mix(in srgb, var(--smart-notes-warm-3) 72%, transparent)
+  );
+}
+
+.smart-notes-home-grid .smart-notes-panel:nth-child(1)::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--smart-notes-warm-2) 75%, transparent),
+    color-mix(in srgb, var(--smart-notes-warm-1) 70%, transparent)
+  );
+}
+
+.smart-notes-home-grid .smart-notes-panel:nth-child(2)::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--smart-notes-warm-3) 75%, transparent),
+    color-mix(in srgb, #56cfe1 70%, transparent)
+  );
+}
+
+.smart-notes-home-grid .smart-notes-panel:nth-child(3)::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--smart-notes-warm-4) 75%, transparent),
+    color-mix(in srgb, var(--smart-notes-warm-2) 70%, transparent)
+  );
+}
+
+.smart-notes-home-grid .smart-notes-panel:nth-child(4)::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, #6dd3ce 75%, transparent),
+    color-mix(in srgb, #ffc971 70%, transparent)
+  );
+}
+
+.smart-notes-home-grid .smart-notes-panel:nth-child(5)::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, #ff9f9f 75%, transparent),
+    color-mix(in srgb, #ffd166 70%, transparent)
+  );
 }
 
 .smart-notes-habits-panel {
