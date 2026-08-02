@@ -244,6 +244,58 @@
   margin: 0;
 }
 
+.smart-notes-panel-action-link {
+  border: 1px solid var(--background-modifier-border);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-primary));
+  color: var(--text-accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.smart-notes-panel-action-link:hover {
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-primary));
+  transform: translateY(-1px);
+}
+
+.smart-notes-panel-action-link:disabled {
+  color: var(--text-faint);
+  border-color: var(--background-modifier-border);
+  background: var(--background-primary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.smart-notes-panel-select {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  min-height: 28px;
+}
+
+.smart-notes-panel-select:hover,
+.smart-notes-panel-select:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.smart-notes-habits-caption {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+}
+
 .smart-notes-calendar-help {
   margin: 8px 0 0;
   color: var(--text-muted);
@@ -441,10 +493,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.smart-notes-calendar-link-wrap {
-  margin-top: 8px;
 }
 
 .smart-notes-hidden-count {

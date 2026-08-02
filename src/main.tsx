@@ -5,6 +5,7 @@ import { AgendaItemView, VIEW_TYPE_AGENDA } from "./views/AgendaItemView";
 import {
   DEFAULT_ICS_CALENDARS,
   DEFAULT_SETTINGS,
+  HabitsWindowPreset,
   SmartNotesSettings,
 } from "./settings";
 
@@ -16,7 +17,15 @@ export default class SmartNotesBooksPlugin extends Plugin {
 
     this.registerView(
       VIEW_TYPE_HOME,
-      (leaf: WorkspaceLeaf) => new HomeItemView(leaf, () => this.settings)
+      (leaf: WorkspaceLeaf) =>
+        new HomeItemView(
+          leaf,
+          () => this.settings,
+          async (preset) => {
+            this.settings.habitsWindowPreset = this.normalizeHabitsWindowPreset(preset);
+            await this.saveSettings();
+          }
+        )
     );
 
     this.registerView(
@@ -115,11 +124,25 @@ export default class SmartNotesBooksPlugin extends Plugin {
 
     const agendaDaysAhead = this.normalizeDays(data?.agendaDaysAhead);
     const icsCalendars = this.normalizeCalendars(data?.icsCalendars);
+    const habitsWindowPreset = this.normalizeHabitsWindowPreset(data?.habitsWindowPreset);
 
     this.settings = {
       agendaDaysAhead,
       icsCalendars,
+      habitsWindowPreset,
     };
+  }
+
+  normalizeHabitsWindowPreset(value: unknown): HabitsWindowPreset {
+    if (
+      value === "today" ||
+      value === "last3" ||
+      value === "week" ||
+      value === "month"
+    ) {
+      return value;
+    }
+    return DEFAULT_SETTINGS.habitsWindowPreset;
   }
 
   private normalizeDays(value: unknown): number {
@@ -180,7 +203,29 @@ class SmartNotesSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Smart Notes - Agenda ICS" });
+    containerEl.createEl("h2", { text: "Smart Notes" });
+
+    containerEl.createEl("h3", { text: "Home dashboard" });
+
+    new Setting(containerEl)
+      .setName("Janela do card de hábitos")
+      .setDesc("Define quantos dias o card de hábitos mostra na Home.")
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption("today", "Hoje")
+          .addOption("last3", "Últimos 3 dias")
+          .addOption("week", "Última semana")
+          .addOption("month", "Último mês");
+
+        dropdown.setValue(this.plugin.settings.habitsWindowPreset);
+        dropdown.onChange(async (value) => {
+          this.plugin.settings.habitsWindowPreset =
+            this.plugin.normalizeHabitsWindowPreset(value);
+          await this.plugin.saveSettings();
+        });
+      });
+
+    containerEl.createEl("h3", { text: "Agenda ICS" });
 
     new Setting(containerEl)
       .setName("Dias para mostrar")
@@ -288,6 +333,7 @@ class SmartNotesSettingTab extends PluginSettingTab {
           this.plugin.settings = {
             agendaDaysAhead: DEFAULT_SETTINGS.agendaDaysAhead,
             icsCalendars: DEFAULT_ICS_CALENDARS.map((entry) => ({ ...entry })),
+            habitsWindowPreset: DEFAULT_SETTINGS.habitsWindowPreset,
           };
           await this.plugin.saveSettings();
           this.display();

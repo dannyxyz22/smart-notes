@@ -2,17 +2,23 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import * as React from "react";
 import { Root, createRoot } from "react-dom/client";
 import { HomeView } from "./HomeView";
-import { SmartNotesSettings } from "../settings";
+import { HabitsWindowPreset, SmartNotesSettings } from "../settings";
 
 export const VIEW_TYPE_HOME = "smart-notes-home-view";
 
 export class HomeItemView extends ItemView {
   private root: Root | null = null;
   private readonly getSettings: () => SmartNotesSettings;
+  private readonly onHabitsWindowPresetChange: (preset: HabitsWindowPreset) => Promise<void>;
 
-  constructor(leaf: WorkspaceLeaf, getSettings: () => SmartNotesSettings) {
+  constructor(
+    leaf: WorkspaceLeaf,
+    getSettings: () => SmartNotesSettings,
+    onHabitsWindowPresetChange: (preset: HabitsWindowPreset) => Promise<void>
+  ) {
     super(leaf);
     this.getSettings = getSettings;
+    this.onHabitsWindowPresetChange = onHabitsWindowPresetChange;
   }
 
   getViewType(): string {
@@ -43,6 +49,13 @@ export class HomeItemView extends ItemView {
 
   private renderView(): void {
     if (!this.root) return;
-    this.root.render(<HomeView app={this.app} settings={this.getSettings()} leaf={this.leaf} />);
+    this.root.render(
+      <HomeView
+        app={this.app}
+        settings={this.getSettings()}
+        leaf={this.leaf}
+        onHabitsWindowPresetChange={this.onHabitsWindowPresetChange}
+      />
+    );
   }
 }

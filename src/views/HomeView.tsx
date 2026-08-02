@@ -2,12 +2,13 @@ import * as React from "react";
 import { App, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
 import { useHabitsTracker } from "../data/useHabitsTracker";
-import { SmartNotesSettings } from "../settings";
+import { HabitsWindowPreset, SmartNotesSettings } from "../settings";
 
 interface HomeViewProps {
   app: App;
   settings: SmartNotesSettings;
   leaf: WorkspaceLeaf;
+  onHabitsWindowPresetChange: (preset: HabitsWindowPreset) => Promise<void>;
 }
 
 function formatDate(date: Date): string {
@@ -40,14 +41,6 @@ function isSameDay(left: Date, right: Date): boolean {
     left.getFullYear() === right.getFullYear() &&
     left.getMonth() === right.getMonth() &&
     left.getDate() === right.getDate()
-  );
-}
-
-function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void }) {
-  return (
-    <button className="smart-notes-chip" onClick={() => onOpen(file)}>
-      {file.basename}
-    </button>
   );
 }
 
@@ -110,12 +103,38 @@ function TitleIcon({ icon }: { icon: string }) {
   return <span ref={ref} className="smart-notes-title-icon" aria-hidden="true" />;
 }
 
-export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
+export function HomeView({
+  app,
+  settings: _settings,
+  leaf,
+  onHabitsWindowPresetChange,
+}: HomeViewProps) {
+  const habitsWindowDays =
+    _settings.habitsWindowPreset === "today"
+      ? 1
+      : _settings.habitsWindowPreset === "last3"
+        ? 3
+        : _settings.habitsWindowPreset === "month"
+          ? 30
+          : 7;
+  const habitsWindowLabel =
+    _settings.habitsWindowPreset === "today"
+      ? "Hoje"
+      : _settings.habitsWindowPreset === "last3"
+        ? "Últimos 3 dias"
+        : _settings.habitsWindowPreset === "month"
+          ? "Último mês"
+          : "Última semana";
+
   const data = useDashboard(app);
-  const habits = useHabitsTracker(app, 7);
+  const habits = useHabitsTracker(app, habitsWindowDays);
   const todayKey = todayJournalKey();
   const visibleUpcomingTasks = data.upcomingTasks.slice(0, 10);
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
+  const visibleInboxNotes = data.inboxNotes.slice(0, 10);
+  const hiddenInboxCount = Math.max(0, data.inboxNotes.length - visibleInboxNotes.length);
+  const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
+  const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
@@ -157,7 +176,28 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
       </div>
 
       <div className="smart-notes-panel smart-notes-panel-wide smart-notes-habits-panel">
-        <h2>Hábitos (últimos dias)</h2>
+        <div className="smart-notes-panel-header-inline">
+          <h2 className="smart-notes-title-with-icon">
+            <TitleIcon icon="activity" />
+            <span>Hábitos</span>
+          </h2>
+          <select
+            className="smart-notes-panel-select"
+            value={_settings.habitsWindowPreset}
+            onChange={(event) => {
+              const preset = event.target.value as HabitsWindowPreset;
+              void onHabitsWindowPresetChange(preset);
+            }}
+            aria-label="Janela do card de hábitos"
+            title="Janela do card de hábitos"
+          >
+            <option value="today">Hoje</option>
+            <option value="last3">Últimos 3 dias</option>
+            <option value="week">Última semana</option>
+            <option value="month">Último mês</option>
+          </select>
+        </div>
+        <p className="smart-notes-muted smart-notes-habits-caption">Exibindo: {habitsWindowLabel}</p>
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
         ) : (
@@ -230,10 +270,19 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
 
       <div className="smart-notes-home-grid">
         <div className="smart-notes-panel">
-          <h2 className="smart-notes-title-with-icon">
-            <TitleIcon icon="list-todo" />
-            <span>Tarefas</span>
-          </h2>
+          <div className="smart-notes-panel-header-inline">
+            <h2 className="smart-notes-title-with-icon">
+              <TitleIcon icon="list-todo" />
+              <span>Tarefas</span>
+            </h2>
+            <button
+              className="smart-notes-panel-action-link"
+              disabled={!calendarViewLink?.file}
+              onClick={() => calendarViewLink?.file && openFile(calendarViewLink.file)}
+            >
+              CalendarView
+            </button>
+          </div>
           {visibleUpcomingTasks.length === 0 ? (
             <p className="smart-notes-muted">Sem tarefas abertas com Do date.</p>
           ) : (
@@ -259,24 +308,13 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
               +{hiddenUpcomingCount} tarefa(s) não exibida(s)
             </p>
           ) : null}
-          <div className="smart-notes-calendar-link-wrap">
-            {data.links
-              .filter((item) => item.label === "CalendarView")
-              .map((item) => (
-                <button
-                  key={item.label}
-                  className="smart-notes-link-button"
-                  disabled={!item.file}
-                  onClick={() => item.file && openFile(item.file)}
-                >
-                  CalendarView
-                </button>
-              ))}
-          </div>
         </div>
 
         <div className="smart-notes-panel">
-          <h2>Finalizadas hoje</h2>
+          <h2 className="smart-notes-title-with-icon">
+            <TitleIcon icon="check-check" />
+            <span>Finalizadas hoje</span>
+          </h2>
           {data.completedToday.length === 0 ? (
             <p className="smart-notes-muted">Nenhuma tarefa finalizada hoje ainda.</p>
           ) : (
@@ -291,21 +329,44 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
           )}
         </div>
 
-        <div className="smart-notes-panel smart-notes-panel-wide">
-          <h2>Inbox e triagem rapida</h2>
+        <div className="smart-notes-panel">
+          <div className="smart-notes-panel-header-inline">
+            <h2 className="smart-notes-title-with-icon">
+              <TitleIcon icon="inbox" />
+              <span>Inbox e triagem rápida</span>
+            </h2>
+            <button
+              className="smart-notes-panel-action-link"
+              disabled={!inboxProcessingLink?.file}
+              onClick={() => inboxProcessingLink?.file && openFile(inboxProcessingLink.file)}
+            >
+              Inbox processing
+            </button>
+          </div>
           {data.inboxNotes.length === 0 ? (
-            <p className="smart-notes-muted">A pasta inbox esta vazia.</p>
+            <p className="smart-notes-muted">A pasta inbox está vazia.</p>
           ) : (
-            <div className="smart-notes-chip-wrap">
-              {data.inboxNotes.slice(0, 20).map((file) => (
-                <FileChip key={file.path} file={file} onOpen={openFile} />
+            <ul className="smart-notes-list">
+              {visibleInboxNotes.map((file) => (
+                <li key={file.path}>
+                  <button onClick={() => openFile(file)}>{file.basename}</button>
+                  <span>{formatDateTime(file.stat.mtime)}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
+          {hiddenInboxCount > 0 ? (
+            <p className="smart-notes-muted smart-notes-hidden-count">
+              +{hiddenInboxCount} tarefa(s) não exibida(s)
+            </p>
+          ) : null}
         </div>
 
         <div className="smart-notes-panel">
-          <h2>Livros</h2>
+          <h2 className="smart-notes-title-with-icon">
+            <TitleIcon icon="book-open" />
+            <span>Livros</span>
+          </h2>
           <div className="smart-notes-link-list">
             {data.links
               .filter((item) =>
@@ -327,7 +388,10 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
         </div>
 
         <div className="smart-notes-panel smart-notes-panel-wide">
-          <h2>Notas recentes</h2>
+          <h2 className="smart-notes-title-with-icon">
+            <TitleIcon icon="clock-3" />
+            <span>Notas recentes</span>
+          </h2>
           <ul className="smart-notes-list">
             {data.recentNotes.map((note) => (
               <li key={note.path}>
