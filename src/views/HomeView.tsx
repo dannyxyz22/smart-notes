@@ -91,10 +91,23 @@ function StatusIcon({ status }: { status: boolean | null }) {
   return <span ref={ref} className="smart-notes-status-icon" />;
 }
 
+function TitleIcon({ icon }: { icon: string }) {
+  const ref = React.useRef<HTMLSpanElement | null>(null);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+    setIcon(ref.current, icon);
+  }, [icon]);
+
+  return <span ref={ref} className="smart-notes-title-icon" aria-hidden="true" />;
+}
+
 export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
   const data = useDashboard(app);
   const habits = useHabitsTracker(app, 7);
   const todayKey = todayJournalKey();
+  const visibleUpcomingTasks = data.upcomingTasks.slice(0, 10);
+  const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
@@ -135,12 +148,15 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
 
       <div className="smart-notes-home-grid">
         <div className="smart-notes-panel">
-          <h2>Proximos compromissos</h2>
-          {data.upcomingTasks.length === 0 ? (
+          <h2 className="smart-notes-title-with-icon">
+            <TitleIcon icon="list-todo" />
+            <span>Tarefas</span>
+          </h2>
+          {visibleUpcomingTasks.length === 0 ? (
             <p className="smart-notes-muted">Sem compromissos para hoje ou próximos dias.</p>
           ) : (
             <ul className="smart-notes-list">
-              {data.upcomingTasks.map((task) => (
+              {visibleUpcomingTasks.map((task) => (
                 <li key={task.file.path}>
                   <button onClick={() => openFile(task.file)}>{task.title}</button>
                   <span>{task.dueDate ? formatDate(task.dueDate) : "-"}</span>
@@ -148,6 +164,11 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
               ))}
             </ul>
           )}
+          {hiddenUpcomingCount > 0 ? (
+            <p className="smart-notes-muted smart-notes-hidden-count">
+              +{hiddenUpcomingCount} tarefa(s) não exibida(s)
+            </p>
+          ) : null}
           <div className="smart-notes-calendar-link-wrap">
             {data.links
               .filter((item) => item.label === "CalendarView")

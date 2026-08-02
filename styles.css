@@ -192,6 +192,24 @@
   font-size: 1rem;
 }
 
+.smart-notes-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.smart-notes-title-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+}
+
+.smart-notes-title-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
 .smart-notes-panel-header-inline {
   display: flex;
   align-items: center;
@@ -393,6 +411,10 @@
 
 .smart-notes-calendar-link-wrap {
   margin-top: 8px;
+}
+
+.smart-notes-hidden-count {
+  margin-top: 6px;
 }
 
 .smart-notes-link-button:disabled {

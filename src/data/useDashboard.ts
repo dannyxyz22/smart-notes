@@ -184,8 +184,11 @@ function computeDashboard(app: App): DashboardData {
     const cache = app.metadataCache.getFileCache(task.file);
     const fm = (cache?.frontmatter ?? {}) as FrontmatterShape;
     const fromFrontmatter = toDate(fm.modified);
-    const modifiedAt = fromFrontmatter ?? new Date(task.file.stat.mtime);
-    return isSameDay(modifiedAt, now);
+    const fileModifiedAt = new Date(task.file.stat.mtime);
+
+    if (isSameDay(fileModifiedAt, now)) return true;
+    if (fromFrontmatter && isSameDay(fromFrontmatter, now)) return true;
+    return false;
   });
 
   const upcomingTasks = [...openTasks]
@@ -193,8 +196,7 @@ function computeDashboard(app: App): DashboardData {
       (task) =>
         task.dueDate && startOfDay(task.dueDate).getTime() >= todayStart.getTime()
     )
-    .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0))
-    .slice(0, 6);
+    .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0));
 
   const recentNotes = [...markdownFiles]
     .sort((a, b) => b.stat.mtime - a.stat.mtime)
