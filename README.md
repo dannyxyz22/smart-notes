@@ -1,114 +1,189 @@
-# Smart Notes — Books
+# Smart Notes
 
-Plugin de Obsidian que detecta notas com `type: book` no frontmatter e
-exibe uma galeria em React, sem sair do vault e sem duplicar dados —
-o Markdown continua sendo a única fonte de verdade.
+Plugin de Obsidian com três funcionalidades integradas:
 
-## Como está organizado
+1. **Home Dashboard** — painel central com métricas do vault, tarefas, inbox e atalhos para notas importantes.
+2. **Agenda ICS** — painel lateral com os próximos compromissos lidos diretamente de feeds `.ics` do Google Calendar (sem iframe, sem dependência de sessão).
+3. **Galeria de Livros** — view em grid de todas as notas com `type: book` no frontmatter.
+
+O Markdown continua sendo a única fonte de verdade. O plugin nunca escreve nos arquivos.
+
+---
+
+## Estrutura do projeto
 
 ```
-smart-notes-obsidian/
-├── manifest.json          # metadados do plugin (id, versão, etc.)
+smart-notes/
+├── manifest.json
 ├── package.json
 ├── tsconfig.json
-├── esbuild.config.mjs     # empacota src/ -> main.js
-├── styles.css             # copiado para o vault junto com main.js
+├── esbuild.config.mjs        # empacota src/ → main.js
+├── styles.css
 └── src/
-    ├── main.tsx           # Plugin: registra a view, o ícone e o comando
-    ├── types.ts           # BookRecord — o "modelo" derivado do frontmatter
+    ├── main.tsx              # Plugin: registra views, comandos e settings
+    ├── settings.ts           # Tipo SmartNotesSettings + defaults
+    ├── types.ts              # BookRecord
     ├── data/
-    │   └── useBooks.ts    # hook que lê o vault via metadataCache e mantém a lista sincronizada
+    │   ├── useBooks.ts       # Hook: lê notas type:book via metadataCache
+    │   ├── useDashboard.ts   # Hook: agrega tarefas, inbox e notas recentes
+    │   └── useIcsAgenda.ts   # Hook: busca e parseia feeds ICS
     └── views/
-        ├── BooksItemView.tsx  # ponte entre ItemView (Obsidian) e React
-        ├── BooksView.tsx      # tela: busca, ordenação, grid
-        └── BookCard.tsx       # card individual de um livro
+        ├── HomeItemView.tsx  # ItemView bridge → HomeView
+        ├── HomeView.tsx      # Dashboard principal (tab do editor)
+        ├── AgendaItemView.tsx # ItemView bridge → AgendaView (sidebar)
+        ├── AgendaView.tsx    # Lista de compromissos estilo Google Calendar
+        ├── BooksItemView.tsx # ItemView bridge → BooksView
+        ├── BooksView.tsx     # Galeria com busca e ordenação
+        └── BookCard.tsx      # Card individual de livro
 ```
 
-Fluxo de dados (unidirecional, como descrito na ideia original):
+---
+
+## Views e comandos
+
+| Ação | Como acessar |
+|---|---|
+| Abrir Home dashboard | Ícone 🏠 no ribbon · Command Palette |
+| Abrir painel de Agenda | Command Palette → "Abrir painel de Agenda" |
+| Abrir view de Livros | Command Palette → "Abrir view de Livros" |
+
+O **Home dashboard** abre como aba no editor principal. A **Agenda** abre como painel na sidebar direita.
+
+---
+
+## Home Dashboard
+
+Seções exibidas:
+
+- **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox.
+- **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
+- **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.
+- **Inbox e triagem rápida** — notas da pasta `inbox/`, ordenadas por data de modificação.
+- **Pessoas e hábitos** — atalhos para `processed/Pessoas.base`, `processed/Journal.base` e `processed/CalendarView`.
+- **Livros** — atalhos para `processed/Wishlist...` e `processed/Biblioteca.base`.
+- **Notas recentes** — últimas 8 notas modificadas no vault.
+
+Clicar em qualquer link abre o arquivo na **mesma aba** (substitui o dashboard).
+
+### Tarefas
+
+O hook `useDashboard` detecta tarefas via tag `#task` (no corpo ou no frontmatter). Campos relevantes:
+
+```yaml
+---
+tags: [task]
+title: Título da tarefa
+Done: true          # ou false
+Do date: "2026-08-10"
+modified: 2026-08-01T20:00:00-03:00
+---
+```
+
+---
+
+## Agenda ICS
+
+O painel lateral lê diretamente feeds `.ics` privados do Google Calendar via `requestUrl` (API do Obsidian — sem CORS, sem iframe).
+
+### Configurar calendários
+
+Acesse **Configurações → Smart Notes** e:
+
+1. Cole a URL ICS de cada calendário (Google Calendar: Configurações do calendário → "Endereço secreto no formato iCal").
+2. Defina nome e cor (hex `#RRGGBB`).
+3. Ajuste "Dias para mostrar" (padrão: 21, máximo: 90).
+4. Use **Adicionar calendário** para incluir novos feeds.
+
+> ⚠️ URLs ICS são chaves privadas de acesso. **Não as inclua em repositórios públicos.** Elas são salvas no `data.json` do plugin dentro do vault (não no código-fonte).
+
+### Visual
+
+Layout inspirado no Google Calendar Agenda:
 
 ```
-Vault (arquivos .md)
-   -> app.metadataCache (Obsidian já faz o parse do YAML)
-   -> useBooks() converte frontmatter em BookRecord[]
-   -> BooksView / BookCard apenas renderizam
+[ 1 ]  AGO., SAB.
+  ●  Dia todo   Aniversário Akira         Pessoal
+  ●  13:00      Santa Missa em Latim      Rotina
+  ●  20:00      Week plan                 Rotina
+
+[ 3 ]  AGO., SEG.
+  ●  08:00      Márcio Jardim             Pessoal
 ```
 
-O React **nunca** escreve nos arquivos nesta primeira versão — é uma
-view somente leitura. Clicar em um card abre a nota original no editor
-padrão do Obsidian (`app.workspace.getLeaf().openFile()`), então editar
-ainda é 100% Markdown. O próximo passo natural (ver "Próximos passos"
-abaixo) é permitir editar campos como `progress` ou `rating` direto no
-card, escrevendo de volta via `processFrontMatter`.
+- Número do dia em círculo (azul quando é hoje).
+- Eventos do dia agrupados abaixo, ordenados por horário.
+- Eventos all-day exibem "Dia todo".
+- Coluna do nome do calendário omitida em telas estreitas.
 
-## Formato de nota esperado
+### Suporte a recorrência
 
-```markdown
+Regras `RRULE` são expandidas pela biblioteca [`rrule`](https://github.com/jakubroztocil/rrule). Exceções `EXDATE` são respeitadas.
+
+---
+
+## Galeria de Livros
+
+Detecta automaticamente todas as notas com `type: book` no frontmatter.
+
+### Formato de nota esperado
+
+```yaml
 ---
 type: book
 title: O Hobbit
-author: Tolkien
-status: lendo
-progress: 42
-rating: 5
-cover: "https://exemplo.com/capa.jpg"   # opcional
+author: J.R.R. Tolkien
+status: lendo          # lendo | lido | quero ler
+progress: 42           # 0–100
+rating: 5              # 0–5
+cover: "https://..."   # opcional
 ---
-
-# Resumo
-...
 ```
 
-Todos os campos além de `type` e `title` são opcionais — a view lida
-bem com a ausência deles.
+Todos os campos além de `type` são opcionais.
 
-## Instalar no seu vault (modo desenvolvimento)
+### Funcionalidades da view
 
-1. Dentro do vault, crie a pasta do plugin:
+- Busca por título ou autor.
+- Ordenação por título, autor, avaliação ou progresso.
+- Barra de progresso e estrelas de avaliação no card.
+- Clicar no card abre a nota no editor.
+
+---
+
+## Instalar no vault (modo desenvolvimento)
+
+1. Crie a pasta do plugin no vault:
    ```
-   <SeuVault>/.obsidian/plugins/smart-notes-books/
+   <SeuVault>/.obsidian/plugins/smart-notes/
    ```
-2. Copie para essa pasta: `manifest.json`, `styles.css` e o `main.js`
-   gerado pelo build (veja abaixo).
-3. No Obsidian: **Configurações → Plugins da comunidade** → desativar
-   "Modo seguro" (se necessário) → recarregar plugins → ativar
-   "Smart Notes - Books".
-4. Um ícone de livro aberto aparece na barra lateral (ribbon). Clique
-   nele, ou use o Command Palette → "Abrir view de Livros".
+2. Copie `manifest.json`, `styles.css` e `main.js` para essa pasta.
+3. No Obsidian: **Configurações → Plugins da comunidade** → desativar "Modo seguro" (se necessário) → recarregar → ativar **Smart Notes**.
+
+O script `npm run build` faz o build e copia os arquivos automaticamente para o caminho configurado em `scripts/copy.js`.
+
+---
 
 ## Desenvolver
 
 ```bash
 npm install
-npm run dev     # esbuild em modo watch, gera main.js a cada alteração
+npm run dev     # watch mode — regenera main.js a cada mudança
+npm run build   # build de produção + cópia para o vault
 ```
 
-Para gerar o build final (minificado, sem sourcemap):
+`main.js` é sempre gerado a partir de `src/`. Não edite diretamente.
 
-```bash
-npm run build
+---
+
+## Fluxo de dados
+
+```
+Vault (.md files)
+  └─ metadataCache  ──► useBooks()      ──► BooksView
+  └─ vault events   ──► useDashboard()  ──► HomeView
+
+Google Calendar ICS feeds
+  └─ requestUrl()   ──► useIcsAgenda()  ──► AgendaView
 ```
 
-O `main.js` é sempre gerado a partir de `src/` — não edite o `main.js`
-diretamente.
-
-Dica: para não copiar os arquivos manualmente a cada mudança, muita
-gente cria um symlink da pasta do plugin para dentro do vault, ou usa
-o `npm run dev` apontando o `outfile` do esbuild.config.mjs direto
-para `.obsidian/plugins/smart-notes-books/main.js` do seu vault.
-
-## Próximos passos (fora do escopo desta v0.1)
-
-- **Edição inline**: permitir alterar `progress`/`rating`/`status`
-  direto no card, escrevendo de volta com
-  `app.fileManager.processFrontMatter(file, fn)`.
-- **MarkdownDocument**: extrair a classe de leitura/escrita descrita na
-  ideia original, para também editar as seções de corpo (Resumo,
-  Citações) sem regex frágil.
-- **Views alternativas**: tabela (AG Grid / TanStack Table), Kanban por
-  `status`, timeline por `finished`.
-- **Schema de coleção**: um arquivo `.smart-notes/books.schema.yaml`
-  (ou frontmatter de uma nota de configuração) definindo os campos
-  esperados, para gerar filtros/formulários automaticamente.
-- **Detecção de tipo genérica**: hoje o hook está fixo em `type: book`;
-  o próximo passo é generalizar para `type: <qualquer>` e escolher a
-  view (`BookView`, `PersonView`, `ProjectView`...) dinamicamente, como
-  na arquitetura original.
+Todos os hooks são somente leitura. O vault nunca é modificado pelo plugin.

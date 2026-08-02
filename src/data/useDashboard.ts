@@ -44,8 +44,8 @@ const HOME_LINKS = [
   { label: "Journal", path: "processed/Journal.base" },
   { label: "Inbox processing", path: "processed/Inbox processing.base" },
   {
-    label: "Wishlist - Lista de livros catolicos",
-    path: "processed/Wishlist - Lista de livros catolicos",
+    label: "Wishlist - Lista de livros católicos",
+    path: "processed/Wishlist - Lista de livros católicos",
   },
   { label: "Biblioteca", path: "processed/Biblioteca.base" },
 ];

@@ -138,7 +138,7 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
           <div className="smart-notes-link-list">
             {data.links
               .filter((item) =>
-                ["Wishlist - Lista de livros catolicos", "Biblioteca"].includes(
+                ["Wishlist - Lista de livros católicos", "Biblioteca"].includes(
                   item.label
                 )
               )
