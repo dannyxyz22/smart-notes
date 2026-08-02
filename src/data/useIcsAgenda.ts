@@ -241,7 +241,8 @@ function expandEvents(
     const start = raw.start.date;
     const end = raw.end?.date ?? new Date(start.getTime() + occurrenceDurationMs);
 
-    if (end.getTime() < rangeStart.getTime()) continue;
+    // <= exclui eventos cujo DTEND cai exatamente em rangeStart (all-day de ontem).
+    if (end.getTime() <= rangeStart.getTime()) continue;
     if (start.getTime() > rangeEnd.getTime()) continue;
 
     events.push({
