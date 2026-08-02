@@ -20,7 +20,7 @@ export class HomeItemView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Home";
+    return "Smart Notes Home";
   }
 
   getIcon(): string {

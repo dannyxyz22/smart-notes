@@ -133,11 +133,29 @@
 
 .smart-notes-home-header {
   margin-bottom: 14px;
+  text-align: center;
 }
 
 .smart-notes-home-header h1 {
   margin: 0;
   font-size: 1.4rem;
+}
+
+.smart-notes-home-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.smart-notes-home-title .smart-notes-title-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-normal);
+}
+
+.smart-notes-home-title .smart-notes-title-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .smart-notes-home-header p {

@@ -123,8 +123,10 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
   return (
     <div className="smart-notes-home-view">
       <div className="smart-notes-home-header">
-        <h1>Smart Notes Home</h1>
-        <p>Dashboard do vault inspirado no Home.md, agora como plugin.</p>
+        <h1 className="smart-notes-home-title">
+          <TitleIcon icon="home" />
+          <span>Smart Notes Home</span>
+        </h1>
       </div>
 
       <div className="smart-notes-home-stats">
@@ -144,6 +146,78 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
           <div className="smart-notes-stat-label">Inbox</div>
           <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
         </div>
+      </div>
+
+      <div className="smart-notes-panel smart-notes-panel-wide">
+        <h2>Hábitos (últimos dias)</h2>
+        {habits.days.length === 0 ? (
+          <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
+        ) : (
+          <div className="smart-notes-habits-wrap">
+            <table className="smart-notes-habits-table">
+              <thead>
+                <tr>
+                  <th>Dia</th>
+                  <th>%</th>
+                  {habits.rows.map((row) => (
+                    <th key={row.habit.key} className="smart-notes-habit-head" title={row.habit.label}>
+                      <span className="smart-notes-habit-icon-badge">
+                        <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {habits.days.map((day, dayIndex) => {
+                  const isToday = day.file.basename === todayKey;
+                  const statuses = habits.rows.map((row) => row.statuses[dayIndex]);
+                  const filled = statuses.filter((status) => status !== null).length;
+                  const done = statuses.filter((status) => status === true).length;
+                  const completionPercent =
+                    filled === 0 ? 0 : Math.round((done / filled) * 100);
+
+                  return (
+                    <tr
+                      key={day.file.path}
+                      className={isToday ? "smart-notes-habit-row-today" : undefined}
+                    >
+                      <td className={`smart-notes-habit-day${isToday ? " is-today" : ""}`}>
+                        <button onClick={() => openFile(day.file)}>{day.shortLabel}</button>
+                      </td>
+                      <td
+                        className="smart-notes-habit-score"
+                        style={{ color: scoreColor(completionPercent) }}
+                      >
+                        {completionPercent}%
+                      </td>
+                      {statuses.map((status, statusIndex) => (
+                        <td
+                          key={`${day.file.path}-${habits.rows[statusIndex].habit.key}`}
+                          className="smart-notes-habit-status-cell"
+                        >
+                          <button
+                            type="button"
+                            className="smart-notes-habit-status-button"
+                            title={`Alternar ${habits.rows[statusIndex].habit.label}`}
+                            onClick={() =>
+                              habits.toggleStatus(
+                                day.file,
+                                habits.rows[statusIndex].habit.key
+                              )
+                            }
+                          >
+                            <StatusIcon status={status} />
+                          </button>
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="smart-notes-home-grid">
@@ -210,78 +284,6 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
               {data.inboxNotes.slice(0, 20).map((file) => (
                 <FileChip key={file.path} file={file} onOpen={openFile} />
               ))}
-            </div>
-          )}
-        </div>
-
-        <div className="smart-notes-panel smart-notes-panel-wide">
-          <h2>Hábitos (últimos dias)</h2>
-          {habits.days.length === 0 ? (
-            <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
-          ) : (
-            <div className="smart-notes-habits-wrap">
-              <table className="smart-notes-habits-table">
-                <thead>
-                  <tr>
-                    <th>Dia</th>
-                    <th>%</th>
-                    {habits.rows.map((row) => (
-                      <th key={row.habit.key} className="smart-notes-habit-head" title={row.habit.label}>
-                        <span className="smart-notes-habit-icon-badge">
-                          <HabitIcon icon={row.habit.icon} label={row.habit.label} />
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {habits.days.map((day, dayIndex) => {
-                    const isToday = day.file.basename === todayKey;
-                    const statuses = habits.rows.map((row) => row.statuses[dayIndex]);
-                    const filled = statuses.filter((status) => status !== null).length;
-                    const done = statuses.filter((status) => status === true).length;
-                    const completionPercent =
-                      filled === 0 ? 0 : Math.round((done / filled) * 100);
-
-                    return (
-                      <tr
-                        key={day.file.path}
-                        className={isToday ? "smart-notes-habit-row-today" : undefined}
-                      >
-                        <td className={`smart-notes-habit-day${isToday ? " is-today" : ""}`}>
-                          <button onClick={() => openFile(day.file)}>{day.shortLabel}</button>
-                        </td>
-                        <td
-                          className="smart-notes-habit-score"
-                          style={{ color: scoreColor(completionPercent) }}
-                        >
-                          {completionPercent}%
-                        </td>
-                        {statuses.map((status, statusIndex) => (
-                          <td
-                            key={`${day.file.path}-${habits.rows[statusIndex].habit.key}`}
-                            className="smart-notes-habit-status-cell"
-                          >
-                            <button
-                              type="button"
-                              className="smart-notes-habit-status-button"
-                              title={`Alternar ${habits.rows[statusIndex].habit.label}`}
-                              onClick={() =>
-                                habits.toggleStatus(
-                                  day.file,
-                                  habits.rows[statusIndex].habit.key
-                                )
-                              }
-                            >
-                              <StatusIcon status={status} />
-                            </button>
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
           )}
         </div>
