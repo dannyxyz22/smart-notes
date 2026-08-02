@@ -23,7 +23,7 @@ export default class SmartNotesBooksPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new BooksItemView(leaf)
     );
 
-    this.addRibbonIcon("home", "Abrir Home (Smart Notes)", () => {
+    this.addRibbonIcon("layout-dashboard", "Abrir dashboard (Smart Notes)", () => {
       this.activateHomeView();
     });
 
