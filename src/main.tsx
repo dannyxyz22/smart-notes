@@ -27,10 +27,6 @@ export default class SmartNotesBooksPlugin extends Plugin {
       this.activateHomeView();
     });
 
-    this.addRibbonIcon("book-open", "Abrir Livros (Smart Notes)", () => {
-      this.activateBooksView();
-    });
-
     this.addCommand({
       id: "smart-notes-open-home-view",
       name: "Abrir Home dashboard",
