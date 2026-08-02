@@ -329,6 +329,29 @@
   padding: 0;
 }
 
+.smart-notes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smart-notes-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.smart-notes-list li + li {
+  margin-top: 6px;
+}
+
+.smart-notes-list li button {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .smart-notes-list li button:hover,
 .smart-notes-link-button:hover,
 .smart-notes-chip:hover {
@@ -339,6 +362,7 @@
   color: var(--text-muted);
   font-size: 0.8rem;
   white-space: nowrap;
+  justify-self: end;
 }
 
 .smart-notes-muted {
@@ -437,6 +461,15 @@
 
 .smart-notes-habit-day button:hover {
   text-decoration: underline;
+}
+
+.smart-notes-habits-table tbody tr.smart-notes-habit-row-today td {
+  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+}
+
+.smart-notes-habit-day.is-today button {
+  color: var(--interactive-accent);
+  font-weight: 700;
 }
 
 .smart-notes-habit-status-cell {

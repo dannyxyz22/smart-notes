@@ -27,6 +27,14 @@ function formatDateTime(ts: number): string {
   }).format(new Date(ts));
 }
 
+function todayJournalKey(): string {
+  const now = new Date();
+  const yyyy = `${now.getFullYear()}`;
+  const mm = `${now.getMonth() + 1}`.padStart(2, "0");
+  const dd = `${now.getDate()}`.padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function FileChip({ file, onOpen }: { file: TFile; onOpen: (f: TFile) => void }) {
   return (
     <button className="smart-notes-chip" onClick={() => onOpen(file)}>
@@ -86,6 +94,7 @@ function StatusIcon({ status }: { status: boolean | null }) {
 export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
   const data = useDashboard(app);
   const habits = useHabitsTracker(app, 7);
+  const todayKey = todayJournalKey();
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
@@ -192,6 +201,7 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
                 </thead>
                 <tbody>
                   {habits.days.map((day, dayIndex) => {
+                    const isToday = day.file.basename === todayKey;
                     const statuses = habits.rows.map((row) => row.statuses[dayIndex]);
                     const filled = statuses.filter((status) => status !== null).length;
                     const done = statuses.filter((status) => status === true).length;
@@ -199,8 +209,11 @@ export function HomeView({ app, settings: _settings, leaf }: HomeViewProps) {
                       filled === 0 ? 0 : Math.round((done / filled) * 100);
 
                     return (
-                      <tr key={day.file.path}>
-                        <td className="smart-notes-habit-day">
+                      <tr
+                        key={day.file.path}
+                        className={isToday ? "smart-notes-habit-row-today" : undefined}
+                      >
+                        <td className={`smart-notes-habit-day${isToday ? " is-today" : ""}`}>
                           <button onClick={() => openFile(day.file)}>{day.shortLabel}</button>
                         </td>
                         <td
