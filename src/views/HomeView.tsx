@@ -135,9 +135,15 @@ export function HomeView({
   const hiddenInboxCount = Math.max(0, data.inboxNotes.length - visibleInboxNotes.length);
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
+  const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
+  };
+
+  const fileHref = (file: TFile | null | undefined): string => {
+    if (!file) return "#";
+    return `obsidian://open?vault=${encodeURIComponent(app.vault.getName())}&file=${encodeURIComponent(file.path)}`;
   };
 
   const scoreColor = (value: number): string => {
@@ -158,7 +164,23 @@ export function HomeView({
 
       <div className="smart-notes-home-stats">
         <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Livros</div>
+          <div className="smart-notes-stat-label">
+            <a
+              className={`smart-notes-stat-link${bibliotecaLink?.file ? "" : " is-disabled"}`}
+              href={fileHref(bibliotecaLink?.file)}
+              onClick={(event) => {
+                if (!bibliotecaLink?.file) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                openFile(bibliotecaLink.file);
+              }}
+            >
+              <TitleIcon icon="book-open" />
+              <span>Livros</span>
+            </a>
+          </div>
           <div className="smart-notes-stat-value">{data.books.length}</div>
         </div>
         <div className="smart-notes-stat-card">
@@ -360,31 +382,6 @@ export function HomeView({
               +{hiddenInboxCount} tarefa(s) não exibida(s)
             </p>
           ) : null}
-        </div>
-
-        <div className="smart-notes-panel">
-          <h2 className="smart-notes-title-with-icon">
-            <TitleIcon icon="book-open" />
-            <span>Livros</span>
-          </h2>
-          <div className="smart-notes-link-list">
-            {data.links
-              .filter((item) =>
-                ["Wishlist - Lista de livros católicos", "Biblioteca"].includes(
-                  item.label
-                )
-              )
-              .map((item) => (
-                <button
-                  key={item.label}
-                  className="smart-notes-link-button"
-                  disabled={!item.file}
-                  onClick={() => item.file && openFile(item.file)}
-                >
-                  {item.label}
-                </button>
-              ))}
-          </div>
         </div>
 
         <div className="smart-notes-panel smart-notes-panel-wide">

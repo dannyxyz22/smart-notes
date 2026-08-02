@@ -211,6 +211,35 @@
   font-size: 0.8rem;
 }
 
+.smart-notes-stat-link {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.smart-notes-stat-link:hover {
+  color: var(--text-accent);
+}
+
+.smart-notes-stat-link.is-disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.smart-notes-stat-link .smart-notes-title-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.smart-notes-stat-link .smart-notes-title-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
 .smart-notes-stat-value {
   font-size: 1.45rem;
   font-weight: 700;
@@ -675,20 +704,20 @@
 }
 
 .smart-notes-habit-day button {
-  border: 0;
-  background: transparent;
+  all: unset;
+  display: inline;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
   color: var(--text-accent);
   cursor: pointer;
-  padding: 0;
+  padding: 0 !important;
   font-weight: 600;
 }
 
 .smart-notes-habit-day button:hover {
   text-decoration: underline;
-}
-
-.smart-notes-habits-table tbody tr.smart-notes-habit-row-today td {
-  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
 }
 
 .smart-notes-habit-day.is-today button {
