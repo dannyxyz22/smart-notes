@@ -892,7 +892,7 @@
   }
 
   .smart-notes-habits-mobile-corner {
-    width: 26px;
+    width: 36px;
   }
 
   .smart-notes-habit-mobile-date-head button {
@@ -912,12 +912,14 @@
   }
 
   .smart-notes-habit-mobile-icon-cell {
-    width: 26px;
+    width: 36px;
+    min-width: 36px;
     background: color-mix(in srgb, var(--background-secondary) 78%, var(--background-primary));
   }
 
   .smart-notes-habit-mobile-status-cell {
-    padding: 2px 4px;
+    min-width: 44px;
+    padding: 0;
   }
 
   .smart-notes-habit-mobile-status-cell.is-today {
@@ -929,16 +931,33 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-width: 44px;
+    min-height: 44px;
     cursor: pointer;
     padding: 0;
-    border-radius: 0;
+    border-radius: 8px;
+    background: transparent !important;
     box-shadow: none;
+  }
+
+  .smart-notes-habit-mobile-toggle:hover,
+  .smart-notes-habit-mobile-toggle:active,
+  .smart-notes-habit-mobile-toggle:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .smart-notes-habit-mobile-toggle:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: -3px;
   }
 
   .smart-notes-habit-mobile-toggle .smart-notes-status-icon,
   .smart-notes-habit-mobile-toggle .smart-notes-status-icon svg {
-    width: 13px;
-    height: 13px;
+    width: 22px;
+    height: 22px;
+    background: transparent !important;
   }
 
   .smart-notes-habit-mobile-percent-head,
@@ -952,14 +971,14 @@
   }
 
   .smart-notes-habits-mobile-table .smart-notes-habit-icon-badge {
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
   }
 
   .smart-notes-habits-mobile-table .smart-notes-habit-icon,
   .smart-notes-habits-mobile-table .smart-notes-habit-icon svg {
-    width: 11px;
-    height: 11px;
+    width: 18px;
+    height: 18px;
   }
 }
