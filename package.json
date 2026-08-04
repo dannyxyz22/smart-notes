@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "node esbuild.config.mjs production && node scripts/copy.js"
+    "build": "node esbuild.config.mjs production && node scripts/copy.js",
+    "typecheck": "tsc --noEmit",
+    "saints:update": "node scripts/update-saints.mjs",
+    "saints:validate": "node scripts/validate-saints.mjs"
   },
   "author": "",
   "license": "MIT",

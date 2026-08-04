@@ -171,11 +171,103 @@
   color: var(--text-muted);
 }
 
+.smart-notes-saint-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 13px 16px;
+  border: 1px solid color-mix(in srgb, var(--smart-notes-warm-1) 62%, var(--background-modifier-border));
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--smart-notes-warm-1) 20%, transparent), transparent 46%),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--background-secondary) 94%, var(--smart-notes-warm-1)),
+      color-mix(in srgb, var(--background-secondary) 94%, var(--background-primary))
+    );
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--background-primary) 82%, transparent);
+}
+
+.smart-notes-saint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: color-mix(in srgb, var(--smart-notes-warm-2) 78%, var(--text-normal));
+  background: color-mix(in srgb, var(--smart-notes-warm-1) 22%, var(--background-primary));
+}
+
+.smart-notes-saint-icon .smart-notes-title-icon,
+.smart-notes-saint-icon .smart-notes-title-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.smart-notes-saint-content {
+  min-width: 0;
+}
+
+.smart-notes-saint-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 10px;
+  margin-bottom: 3px;
+}
+
+.smart-notes-saint-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.smart-notes-saint-date {
+  color: var(--text-faint);
+  font-size: 0.76rem;
+}
+
+.smart-notes-saint-card h2 {
+  margin: 0;
+  color: var(--text-normal);
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.smart-notes-saint-link {
+  color: var(--text-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.smart-notes-saint-link:hover {
+  color: var(--text-accent-hover);
+}
+
 .smart-notes-home-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
   margin-bottom: 12px;
+}
+
+@media (max-width: 720px) {
+  .smart-notes-saint-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .smart-notes-saint-link {
+    grid-column: 2;
+    justify-self: start;
+    white-space: normal;
+  }
 }
 
 .smart-notes-stat-card {

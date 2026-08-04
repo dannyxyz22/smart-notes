@@ -2,6 +2,7 @@ import * as React from "react";
 import { App, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
 import { useHabitsTracker } from "../data/useHabitsTracker";
+import { getSaintOfDay } from "../data/saints";
 import { HabitsWindowPreset, SmartNotesSettings } from "../settings";
 
 interface HomeViewProps {
@@ -26,6 +27,47 @@ function formatDateTime(ts: number): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(ts));
+}
+
+function formatSaintDate(date: Date): string {
+  const formatted = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+function useCurrentLocalDate(): Date {
+  const [currentDate, setCurrentDate] = React.useState(() => new Date());
+
+  React.useEffect(() => {
+    let timeoutId: number | null = null;
+
+    const scheduleNextDay = () => {
+      const now = new Date();
+      const nextDay = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        1,
+        0
+      );
+      timeoutId = window.setTimeout(() => {
+        setCurrentDate(new Date());
+        scheduleNextDay();
+      }, Math.max(1_000, nextDay.getTime() - now.getTime()));
+    };
+
+    scheduleNextDay();
+    return () => {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return currentDate;
 }
 
 function todayJournalKey(): string {
@@ -128,6 +170,8 @@ export function HomeView({
 
   const data = useDashboard(app);
   const habits = useHabitsTracker(app, habitsWindowDays);
+  const currentDate = useCurrentLocalDate();
+  const saintOfDay = getSaintOfDay(currentDate);
   const todayKey = todayJournalKey();
   const visibleUpcomingTasks = data.upcomingTasks.slice(0, 10);
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
@@ -161,6 +205,30 @@ export function HomeView({
           <span>Smart Notes Home</span>
         </h1>
       </div>
+
+      {saintOfDay ? (
+        <section className="smart-notes-saint-card" aria-labelledby="smart-notes-saint-name">
+          <div className="smart-notes-saint-icon">
+            <TitleIcon icon="sparkles" />
+          </div>
+          <div className="smart-notes-saint-content">
+            <div className="smart-notes-saint-heading">
+              <span className="smart-notes-saint-label">Santo do Dia</span>
+              <span className="smart-notes-saint-date">{formatSaintDate(currentDate)}</span>
+            </div>
+            <h2 id="smart-notes-saint-name">{saintOfDay.name}</h2>
+          </div>
+          <a
+            className="smart-notes-saint-link external-link"
+            href={saintOfDay.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Conheça a história de ${saintOfDay.name} no Vatican News`}
+          >
+            Conheça sua história
+          </a>
+        </section>
+      ) : null}
 
       <div className="smart-notes-home-stats">
         <div className="smart-notes-stat-card">

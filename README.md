@@ -55,6 +55,7 @@ O **Home dashboard** abre como aba no editor principal. A **Agenda** abre como p
 
 Seções exibidas:
 
+- **Santo do Dia** — destaque offline do principal santo da data, baseado no calendário do Vatican News.
 - **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox.
 - **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
 - **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.
@@ -64,6 +65,15 @@ Seções exibidas:
 - **Notas recentes** — últimas 8 notas modificadas no vault.
 
 Clicar em qualquer link abre o arquivo na **mesma aba** (substitui o dashboard).
+
+O calendário do **Santo do Dia** tem 366 entradas incorporadas ao plugin e não
+precisa de internet para mostrar o nome. O link da história é opcional e abre a
+página de referência do Vatican News. Para revisar a lista em uma nova versão:
+
+```bash
+npm run saints:update
+npm run saints:validate
+```
 
 ### Tarefas
 
