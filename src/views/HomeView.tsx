@@ -258,9 +258,27 @@ export function HomeView({
                       </td>
                       <td
                         className="smart-notes-habit-score"
-                        style={{ color: scoreColor(completionPercent) }}
                       >
-                        {completionPercent}%
+                        <div
+                          className="smart-notes-habit-progress"
+                          role="progressbar"
+                          aria-label={`Atividades concluídas em ${day.shortLabel}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={completionPercent}
+                          title={`${completionPercent}% das atividades concluídas`}
+                        >
+                          <span
+                            className="smart-notes-habit-progress-fill"
+                            style={{
+                              width: `${completionPercent}%`,
+                              backgroundColor: scoreColor(completionPercent),
+                            }}
+                          />
+                          <span className="smart-notes-habit-progress-label">
+                            {completionPercent}%
+                          </span>
+                        </div>
                       </td>
                       {statuses.map((status, statusIndex) => (
                         <td

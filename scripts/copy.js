@@ -4,11 +4,16 @@ const path = require("path");
 const pluginName = "smart-notes";
 
 const root = path.resolve(__dirname, "..");
-const targets = [
-    path.join("C:", "vault", "obsidian-vault-main", ".obsidian", "plugins", pluginName),
-    path.join("C:", "vault", "obsidian-vault-main", ".obsidian-desktop", "plugins", pluginName),
-    path.join("C:", "vault", "obsidian-vault-main", ".obsidian-desktop-samsung", "plugins", pluginName),
+const vaultRoots = [
+    path.join("C:", "vault", "obsidian-vault-main"),
+    path.join("C:", "Users", "Usuario", "Documents", "Obsidian Vault"),
 ];
+
+const targets = vaultRoots.flatMap((vaultRoot) =>
+    [".obsidian", ".obsidian-desktop", ".obsidian-desktop-samsung"].map((configDirectory) =>
+        path.join(vaultRoot, configDirectory, "plugins", pluginName)
+    )
+);
 
 const files = [
     "main.js",
