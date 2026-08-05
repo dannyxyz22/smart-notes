@@ -77,17 +77,21 @@ npm run saints:validate
 
 ### Tarefas
 
-O hook `useDashboard` detecta tarefas via tag `#task` (no corpo ou no frontmatter). Campos relevantes:
+O hook `useDashboard` detecta tarefas pela propriedade `type: task`. Campos relevantes:
 
 ```yaml
 ---
 tags: [task]
+type: task
 title: Título da tarefa
 Done: true          # ou false
 Do date: "2026-08-10"
 modified: 2026-08-01T20:00:00-03:00
 ---
 ```
+
+Somente notas com `type: task` e `Done`/`done` booleano entram nos totais de
+tarefas. Arquivos da pasta `templates/` são ignorados.
 
 ---
 

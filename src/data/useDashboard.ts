@@ -114,35 +114,24 @@ function normalizeBook(file: TFile, fm: FrontmatterShape): BookRecord | null {
   };
 }
 
-function hasTaskTag(app: App, file: TFile): boolean {
-  const cache = app.metadataCache.getFileCache(file);
-  const tags = cache?.tags ?? [];
-  if (tags.some((tag) => tag.tag.toLowerCase() === "#task")) {
-    return true;
-  }
+function isTemplatePath(path: string): boolean {
+  return path.toLowerCase().startsWith("templates/");
+}
 
-  const frontmatter = cache?.frontmatter as FrontmatterShape | undefined;
-  const fmTags = frontmatter?.tags;
-  if (typeof fmTags === "string") {
-    return fmTags
-      .split(/\s+/)
-      .some((value) => value.replace(/^#/, "").toLowerCase() === "task");
-  }
-  if (Array.isArray(fmTags)) {
-    return fmTags.some((value) => {
-      if (typeof value !== "string") return false;
-      return value.replace(/^#/, "").toLowerCase() === "task";
-    });
-  }
-  return false;
+function taskDoneValue(fm: FrontmatterShape): boolean | null {
+  if (typeof fm.Done === "boolean") return fm.Done;
+  if (typeof fm.done === "boolean") return fm.done;
+  return null;
 }
 
 function toTask(app: App, file: TFile): DashboardTask | null {
-  if (!hasTaskTag(app, file)) return null;
+  if (isTemplatePath(file.path)) return null;
 
   const cache = app.metadataCache.getFileCache(file);
   const fm = (cache?.frontmatter ?? {}) as FrontmatterShape;
-  const done = fm.Done === true || fm.done === true;
+  if (fm.type !== "task") return null;
+  const done = taskDoneValue(fm);
+  if (done === null) return null;
   const dueDate = toDate(fm["Do date"]);
 
   return {
