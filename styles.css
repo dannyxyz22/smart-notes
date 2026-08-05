@@ -338,6 +338,54 @@
   margin-top: 3px;
 }
 
+.smart-notes-stat-main-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.smart-notes-stat-action {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 26px;
+  box-sizing: border-box;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--interactive-accent) 42%, var(--background-modifier-border));
+  border-radius: 7px;
+  color: var(--text-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 7%, var(--background-primary));
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.smart-notes-stat-action:hover {
+  color: var(--text-accent-hover);
+  background: color-mix(in srgb, var(--interactive-accent) 13%, var(--background-primary));
+}
+
+.smart-notes-stat-action:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.smart-notes-stat-action:disabled {
+  color: var(--text-faint);
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.smart-notes-stat-action .smart-notes-title-icon,
+.smart-notes-stat-action .smart-notes-title-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
 .smart-notes-home-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

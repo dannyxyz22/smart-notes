@@ -93,6 +93,10 @@ modified: 2026-08-01T20:00:00-03:00
 Somente notas com `type: task` e `Done`/`done` booleano entram nos totais de
 tarefas. Arquivos da pasta `templates/` são ignorados.
 
+O botão **Nova** no card “Tarefas abertas” usa o Templater e o arquivo
+`templates/Tarefa.md`. A nota é criada no local padrão configurado no Obsidian,
+aberta no editor e deixada pronta para ser renomeada.
+
 ---
 
 ## Agenda ICS

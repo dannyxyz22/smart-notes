@@ -1,5 +1,5 @@
 import * as React from "react";
-import { App, TFile, WorkspaceLeaf, setIcon } from "obsidian";
+import { App, Notice, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { useDashboard } from "../data/useDashboard";
 import { useHabitsTracker } from "../data/useHabitsTracker";
 import { getSaintOfDay } from "../data/saints";
@@ -17,6 +17,26 @@ interface HabitDayProgress {
   total: number;
   percent: number;
 }
+
+interface TemplaterRuntime {
+  create_new_note_from_template: (
+    templateFile: TFile,
+    targetFolder?: undefined,
+    fileName?: string,
+    openNewNote?: boolean
+  ) => Promise<TFile | undefined>;
+}
+
+interface TemplaterPluginInstance {
+  templater?: TemplaterRuntime;
+}
+
+interface CommunityPluginRegistry {
+  getPlugin?: (id: string) => TemplaterPluginInstance | null;
+  plugins?: Record<string, TemplaterPluginInstance | undefined>;
+}
+
+const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
 
 function calculateHabitDayProgress(
   statuses: Array<boolean | null>
@@ -169,6 +189,7 @@ export function HomeView({
   leaf,
   onHabitsWindowPresetChange,
 }: HomeViewProps) {
+  const [creatingTask, setCreatingTask] = React.useState(false);
   const habitsWindowDays =
     _settings.habitsWindowPreset === "today"
       ? 1
@@ -211,6 +232,42 @@ export function HomeView({
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
+  };
+
+  const createTaskFromTemplate = async () => {
+    if (creatingTask) return;
+
+    const template = app.vault.getAbstractFileByPath(TASK_TEMPLATE_PATH);
+    if (!(template instanceof TFile)) {
+      new Notice(`Template não encontrado: ${TASK_TEMPLATE_PATH}`);
+      return;
+    }
+
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (!templater?.create_new_note_from_template) {
+      new Notice("Ative o plugin Templater para criar uma nova tarefa.");
+      return;
+    }
+
+    setCreatingTask(true);
+    try {
+      await templater.create_new_note_from_template(
+        template,
+        undefined,
+        undefined,
+        true
+      );
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar tarefa com Templater", error);
+      new Notice("Não foi possível criar a tarefa com o Templater.");
+    } finally {
+      setCreatingTask(false);
+    }
   };
 
   const fileHref = (file: TFile | null | undefined): string => {
@@ -279,9 +336,22 @@ export function HomeView({
           </div>
           <div className="smart-notes-stat-value">{data.books.length}</div>
         </div>
-        <div className="smart-notes-stat-card">
+        <div className="smart-notes-stat-card smart-notes-task-stat-card">
           <div className="smart-notes-stat-label">Tarefas abertas</div>
-          <div className="smart-notes-stat-value">{data.openTasks.length}</div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.openTasks.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={() => void createTaskFromTemplate()}
+              disabled={creatingTask}
+              aria-label="Criar nova tarefa com o template Tarefa"
+              title="Criar nova tarefa com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingTask ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
         </div>
         <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Finalizadas hoje</div>
