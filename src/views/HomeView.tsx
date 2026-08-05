@@ -12,6 +12,24 @@ interface HomeViewProps {
   onHabitsWindowPresetChange: (preset: HabitsWindowPreset) => Promise<void>;
 }
 
+interface HabitDayProgress {
+  done: number;
+  total: number;
+  percent: number;
+}
+
+function calculateHabitDayProgress(
+  statuses: Array<boolean | null>
+): HabitDayProgress {
+  const total = statuses.filter((status) => status !== null).length;
+  const done = statuses.filter((status) => status === true).length;
+  return {
+    done,
+    total,
+    percent: total === 0 ? 0 : Math.round((done / total) * 100),
+  };
+}
+
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -173,6 +191,16 @@ export function HomeView({
   const currentDate = useCurrentLocalDate();
   const saintOfDay = getSaintOfDay(currentDate);
   const todayKey = todayJournalKey();
+  const habitDayProgress = habits.days.map((_, dayIndex) =>
+    calculateHabitDayProgress(
+      habits.rows.map((row) => row.statuses[dayIndex])
+    )
+  );
+  const todayHabitDayIndex = habits.days.findIndex(
+    (day) => day.file.basename === todayKey
+  );
+  const todayHabitProgress =
+    todayHabitDayIndex >= 0 ? habitDayProgress[todayHabitDayIndex] : null;
   const visibleUpcomingTasks = data.upcomingTasks.slice(0, 10);
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
   const visibleInboxNotes = data.inboxNotes.slice(0, 10);
@@ -288,6 +316,40 @@ export function HomeView({
           </select>
         </div>
         <p className="smart-notes-muted smart-notes-habits-caption">Exibindo: {habitsWindowLabel}</p>
+        <div className="smart-notes-habits-mobile-summary">
+          <div className="smart-notes-habits-mobile-summary-heading">
+            <span>Progresso de hoje</span>
+            <span className="smart-notes-habits-mobile-summary-count">
+              {todayHabitProgress
+                ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`
+                : "Sem registro de hoje"}
+            </span>
+          </div>
+          <div
+            className="smart-notes-habit-progress smart-notes-habits-mobile-today-progress"
+            role="progressbar"
+            aria-label="Hábitos concluídos hoje"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={todayHabitProgress?.percent ?? 0}
+            aria-valuetext={
+              todayHabitProgress
+                ? `${todayHabitProgress.done} de ${todayHabitProgress.total} hábitos concluídos`
+                : "Sem registro de hoje"
+            }
+          >
+            <span
+              className="smart-notes-habit-progress-fill"
+              style={{
+                width: `${todayHabitProgress?.percent ?? 0}%`,
+                backgroundColor: scoreColor(todayHabitProgress?.percent ?? 0),
+              }}
+            />
+            <span className="smart-notes-habit-progress-label">
+              {todayHabitProgress?.percent ?? 0}%
+            </span>
+          </div>
+        </div>
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
         ) : (
@@ -311,10 +373,7 @@ export function HomeView({
                 {habits.days.map((day, dayIndex) => {
                   const isToday = day.file.basename === todayKey;
                   const statuses = habits.rows.map((row) => row.statuses[dayIndex]);
-                  const filled = statuses.filter((status) => status !== null).length;
-                  const done = statuses.filter((status) => status === true).length;
-                  const completionPercent =
-                    filled === 0 ? 0 : Math.round((done / filled) * 100);
+                  const progress = habitDayProgress[dayIndex];
 
                   return (
                     <tr
@@ -333,18 +392,18 @@ export function HomeView({
                           aria-label={`Atividades concluídas em ${day.shortLabel}`}
                           aria-valuemin={0}
                           aria-valuemax={100}
-                          aria-valuenow={completionPercent}
-                          title={`${completionPercent}% das atividades concluídas`}
+                          aria-valuenow={progress.percent}
+                          title={`${progress.percent}% das atividades concluídas`}
                         >
                           <span
                             className="smart-notes-habit-progress-fill"
                             style={{
-                              width: `${completionPercent}%`,
-                              backgroundColor: scoreColor(completionPercent),
+                              width: `${progress.percent}%`,
+                              backgroundColor: scoreColor(progress.percent),
                             }}
                           />
                           <span className="smart-notes-habit-progress-label">
-                            {completionPercent}%
+                            {progress.percent}%
                           </span>
                         </div>
                       </td>
@@ -380,8 +439,9 @@ export function HomeView({
                 <thead>
                   <tr>
                     <th className="smart-notes-habits-mobile-corner" />
-                    {habits.days.map((day) => {
+                    {habits.days.map((day, dayIndex) => {
                       const isToday = day.file.basename === todayKey;
+                      const progress = habitDayProgress[dayIndex];
                       return (
                         <th
                           key={day.file.path}
@@ -389,8 +449,38 @@ export function HomeView({
                           title={day.file.basename}
                         >
                           <button type="button" onClick={() => openFile(day.file)}>
-                            {day.shortLabel}
+                            <span className="smart-notes-habit-mobile-date-label">
+                              {day.shortLabel}
+                            </span>
                           </button>
+                          <span
+                            className="smart-notes-habit-mobile-day-ring"
+                            role="progressbar"
+                            aria-label={`Hábitos concluídos em ${day.shortLabel}`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={progress.percent}
+                            aria-valuetext={`${progress.done} de ${progress.total} hábitos concluídos`}
+                            style={{ color: scoreColor(progress.percent) }}
+                          >
+                            <svg viewBox="0 0 36 36" aria-hidden="true">
+                              <circle
+                                className="smart-notes-habit-mobile-day-ring-track"
+                                cx="18"
+                                cy="18"
+                                r="15"
+                              />
+                              <circle
+                                className="smart-notes-habit-mobile-day-ring-value"
+                                cx="18"
+                                cy="18"
+                                r="15"
+                                pathLength="100"
+                                strokeDasharray={`${progress.percent} 100`}
+                              />
+                            </svg>
+                            <span>{progress.percent}%</span>
+                          </span>
                         </th>
                       );
                     })}
