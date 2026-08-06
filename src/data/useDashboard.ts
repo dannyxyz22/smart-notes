@@ -1,6 +1,7 @@
 import { App, TFile } from "obsidian";
 import { useCallback, useEffect, useState } from "react";
-import { BookRecord, BOOK_TYPE } from "../types";
+import { BookRecord } from "../types";
+import { toBookRecord } from "./bookRecord";
 
 export interface DashboardTask {
   file: TFile;
@@ -101,19 +102,6 @@ function toDate(value: unknown): Date | undefined {
   return undefined;
 }
 
-function normalizeBook(file: TFile, fm: FrontmatterShape): BookRecord | null {
-  if (fm.type !== BOOK_TYPE) return null;
-  return {
-    file,
-    title: typeof fm.title === "string" ? fm.title : file.basename,
-    author: typeof fm.author === "string" ? fm.author : undefined,
-    status: typeof fm.status === "string" ? fm.status : undefined,
-    progress: typeof fm.progress === "number" ? fm.progress : undefined,
-    rating: typeof fm.rating === "number" ? fm.rating : undefined,
-    cover: typeof fm.cover === "string" ? fm.cover : undefined,
-  };
-}
-
 function isTemplatePath(path: string): boolean {
   return path.toLowerCase().startsWith("templates/");
 }
@@ -157,7 +145,7 @@ function computeDashboard(app: App): DashboardData {
     const cache = app.metadataCache.getFileCache(file);
     const fm = (cache?.frontmatter ?? {}) as FrontmatterShape;
 
-    const maybeBook = normalizeBook(file, fm);
+    const maybeBook = toBookRecord(file, fm);
     if (maybeBook) books.push(maybeBook);
 
     const maybeTask = toTask(app, file);

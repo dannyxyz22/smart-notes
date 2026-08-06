@@ -141,13 +141,17 @@ Regras `RRULE` são expandidas pela biblioteca [`rrule`](https://github.com/jaku
 
 ## Galeria de Livros
 
-Detecta automaticamente todas as notas com `type: book` no frontmatter.
+Detecta automaticamente todas as notas com `type: book` no frontmatter. O
+campo também pode ser uma lista YAML que contenha `book`.
 
 ### Formato de nota esperado
 
 ```yaml
 ---
 type: book
+# Também aceito:
+# type:
+#   - book
 title: O Hobbit
 author: J.R.R. Tolkien
 status: lendo          # lendo | lido | quero ler
@@ -158,6 +162,7 @@ cover: "https://..."   # opcional
 ```
 
 Todos os campos além de `type` são opcionais.
+Os aliases em português `autor` e `capa` também são reconhecidos.
 
 ### Funcionalidades da view
 

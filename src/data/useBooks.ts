@@ -1,31 +1,22 @@
 import { App, TFile } from "obsidian";
 import { useEffect, useState, useCallback } from "react";
-import { BookRecord, BOOK_TYPE } from "../types";
+import { BookRecord } from "../types";
+import { BookFrontmatter, toBookRecord } from "./bookRecord";
 
 /**
  * Converte um TFile em um BookRecord, lendo o frontmatter já parseado
  * pelo metadataCache do Obsidian (sem reabrir o arquivo em disco).
  */
-function toBookRecord(app: App, file: TFile): BookRecord | null {
+function readBookRecord(app: App, file: TFile): BookRecord | null {
   const cache = app.metadataCache.getFileCache(file);
-  const fm = cache?.frontmatter;
-  if (!fm || fm.type !== BOOK_TYPE) return null;
-
-  return {
-    file,
-    title: fm.title ?? file.basename,
-    author: fm.author,
-    status: fm.status,
-    progress: typeof fm.progress === "number" ? fm.progress : undefined,
-    rating: typeof fm.rating === "number" ? fm.rating : undefined,
-    cover: fm.cover,
-  };
+  const frontmatter = cache?.frontmatter as BookFrontmatter | undefined;
+  return frontmatter ? toBookRecord(file, frontmatter) : null;
 }
 
 function scanVault(app: App): BookRecord[] {
   const books: BookRecord[] = [];
   for (const file of app.vault.getMarkdownFiles()) {
-    const record = toBookRecord(app, file);
+    const record = readBookRecord(app, file);
     if (record) books.push(record);
   }
   return books.sort((a, b) => a.title.localeCompare(b.title));
