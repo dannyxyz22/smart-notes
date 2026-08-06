@@ -136,7 +136,9 @@ function isInboxPath(path: string): boolean {
 
 function computeDashboard(app: App): DashboardData {
   const now = new Date();
-  const markdownFiles = app.vault.getMarkdownFiles();
+  const markdownFiles = app.vault
+    .getMarkdownFiles()
+    .filter((file) => !isTemplatePath(file.path));
   const books: BookRecord[] = [];
   const tasks: DashboardTask[] = [];
   const inboxNotes: TFile[] = [];

@@ -57,6 +57,7 @@ Seções exibidas:
 
 - **Santo do Dia** — destaque offline do principal santo da data, baseado no calendário do Vatican News.
 - **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox.
+- Arquivos dentro da pasta `templates/` são ignorados em todo o dashboard.
 - **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
 - **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.
 - **Inbox e triagem rápida** — notas da pasta `inbox/`, ordenadas por data de modificação.
