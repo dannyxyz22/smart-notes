@@ -56,7 +56,7 @@ O **Home dashboard** abre como aba no editor principal. A **Agenda** abre como p
 Seções exibidas:
 
 - **Santo do Dia** — destaque offline do principal santo da data, baseado no calendário do Vatican News.
-- **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox.
+- **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox e dias desde a última confissão.
 - Arquivos dentro da pasta `templates/` são ignorados em todo o dashboard.
 - **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
 - **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.

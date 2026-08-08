@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TFile, getAllTags } from "obsidian";
 import { useCallback, useEffect, useState } from "react";
 import { BookRecord } from "../types";
 import { toBookRecord } from "./bookRecord";
@@ -15,6 +15,11 @@ export interface DashboardLink {
   file: TFile | null;
 }
 
+export interface DashboardConfession {
+  file: TFile;
+  date: Date;
+}
+
 export interface DashboardData {
   books: BookRecord[];
   inboxNotes: TFile[];
@@ -22,6 +27,7 @@ export interface DashboardData {
   openTasks: DashboardTask[];
   completedToday: DashboardTask[];
   upcomingTasks: DashboardTask[];
+  lastConfession: DashboardConfession | null;
   links: DashboardLink[];
 }
 
@@ -49,6 +55,7 @@ const HOME_LINKS = [
     path: "processed/Wishlist - Lista de livros católicos",
   },
   { label: "Biblioteca", path: "processed/Biblioteca.base" },
+  { label: "Confissões", path: "processed/Confissões.base" },
 ];
 
 function isSameDay(left: Date, right: Date): boolean {
@@ -142,6 +149,8 @@ function computeDashboard(app: App): DashboardData {
   const books: BookRecord[] = [];
   const tasks: DashboardTask[] = [];
   const inboxNotes: TFile[] = [];
+  let lastConfession: DashboardConfession | null = null;
+  const todayStart = startOfDay(now).getTime();
 
   for (const file of markdownFiles) {
     const cache = app.metadataCache.getFileCache(file);
@@ -152,6 +161,23 @@ function computeDashboard(app: App): DashboardData {
 
     const maybeTask = toTask(app, file);
     if (maybeTask) tasks.push(maybeTask);
+
+    const tags = cache ? getAllTags(cache) ?? [] : [];
+    const isConfession = tags.some(
+      (tag) => tag.normalize("NFC").toLocaleLowerCase("pt-BR") === "#confissão"
+    );
+    if (isConfession) {
+      const confessionDate = toDate(fm["Data da confissão"]);
+      if (confessionDate) {
+        const confessionStart = startOfDay(confessionDate);
+        if (
+          confessionStart.getTime() <= todayStart &&
+          (!lastConfession || confessionStart.getTime() > lastConfession.date.getTime())
+        ) {
+          lastConfession = { file, date: confessionStart };
+        }
+      }
+    }
 
     if (isInboxPath(file.path)) inboxNotes.push(file);
   }
@@ -192,6 +218,7 @@ function computeDashboard(app: App): DashboardData {
     openTasks,
     completedToday,
     upcomingTasks,
+    lastConfession,
     links,
   };
 }

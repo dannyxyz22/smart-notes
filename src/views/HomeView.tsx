@@ -124,6 +124,16 @@ function isSameDay(left: Date, right: Date): boolean {
   );
 }
 
+function calendarDaysBetween(later: Date, earlier: Date): number {
+  const laterUtc = Date.UTC(later.getFullYear(), later.getMonth(), later.getDate());
+  const earlierUtc = Date.UTC(
+    earlier.getFullYear(),
+    earlier.getMonth(),
+    earlier.getDate()
+  );
+  return Math.max(0, Math.floor((laterUtc - earlierUtc) / 86_400_000));
+}
+
 function HabitIcon({ icon, label }: { icon: string; label: string }) {
   const ref = React.useRef<HTMLSpanElement | null>(null);
 
@@ -229,6 +239,10 @@ export function HomeView({
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
   const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
+  const confissoesLink = data.links.find((item) => item.label === "Confissões") ?? null;
+  const daysSinceLastConfession = data.lastConfession
+    ? calendarDaysBetween(currentDate, data.lastConfession.date)
+    : null;
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
@@ -360,6 +374,45 @@ export function HomeView({
         <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Inbox</div>
           <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
+        </div>
+        <div className="smart-notes-stat-card smart-notes-confession-stat-card">
+          <div className="smart-notes-stat-label">
+            <a
+              className={`smart-notes-stat-link${confissoesLink?.file ? "" : " is-disabled"}`}
+              href={fileHref(confissoesLink?.file)}
+              onClick={(event) => {
+                if (!confissoesLink?.file) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                openFile(confissoesLink.file);
+              }}
+            >
+              <TitleIcon icon="church" />
+              <span>Desde a última confissão</span>
+            </a>
+          </div>
+          <div className="smart-notes-stat-value">
+            {daysSinceLastConfession ?? "—"}
+            {daysSinceLastConfession !== null ? (
+              <span className="smart-notes-stat-unit">
+                {daysSinceLastConfession === 1 ? " dia" : " dias"}
+              </span>
+            ) : null}
+          </div>
+          {data.lastConfession ? (
+            <button
+              type="button"
+              className="smart-notes-confession-date"
+              onClick={() => openFile(data.lastConfession!.file)}
+              title="Abrir a nota da última confissão"
+            >
+              Última: {formatDate(data.lastConfession.date)}
+            </button>
+          ) : (
+            <div className="smart-notes-confession-empty">Nenhuma data encontrada</div>
+          )}
         </div>
       </div>
 
