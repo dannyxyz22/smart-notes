@@ -149,10 +149,23 @@
   font-size: 1.4rem;
 }
 
-.smart-notes-home-title {
+.smart-notes-home-view button.smart-notes-home-title {
+  all: unset;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--text-normal);
+  font: inherit;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.smart-notes-home-view button.smart-notes-home-title:hover {
+  color: var(--text-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .smart-notes-home-title .smart-notes-title-icon {

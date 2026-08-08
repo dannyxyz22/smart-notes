@@ -21,7 +21,7 @@ interface HabitDayProgress {
 interface TemplaterRuntime {
   create_new_note_from_template: (
     templateFile: TFile,
-    targetFolder?: undefined,
+    targetFolder?: string,
     fileName?: string,
     openNewNote?: boolean
   ) => Promise<TFile | undefined>;
@@ -37,6 +37,8 @@ interface CommunityPluginRegistry {
 }
 
 const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
+const DAILY_NOTE_FOLDER = "journal";
+const DAILY_NOTE_TEMPLATE_PATH = "templates/Diário.md";
 
 function calculateHabitDayProgress(
   statuses: Array<boolean | null>
@@ -248,6 +250,52 @@ export function HomeView({
     leaf.openFile(file);
   };
 
+  const openTodayJournal = async () => {
+    const journalPath = `${DAILY_NOTE_FOLDER}/${todayKey}.md`;
+    const existing = app.vault.getAbstractFileByPath(journalPath);
+    if (existing instanceof TFile) {
+      openFile(existing);
+      return;
+    }
+
+    const template = app.vault.getAbstractFileByPath(DAILY_NOTE_TEMPLATE_PATH);
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (template instanceof TFile && templater?.create_new_note_from_template) {
+      try {
+        const created = await templater.create_new_note_from_template(
+          template,
+          DAILY_NOTE_FOLDER,
+          todayKey,
+          true
+        );
+        const file = created ?? app.vault.getAbstractFileByPath(journalPath);
+        if (file instanceof TFile) {
+          openFile(file);
+          return;
+        }
+      } catch (error) {
+        console.error("Smart Notes: erro ao criar nota diária com o Templater", error);
+      }
+    }
+
+    try {
+      const folder = app.vault.getAbstractFileByPath(DAILY_NOTE_FOLDER);
+      if (!folder) await app.vault.createFolder(DAILY_NOTE_FOLDER);
+      const timestamp = new Date().toISOString();
+      const content = `---\ncreated: ${timestamp}\nmodified: ${timestamp}\ntags:\n  - journal\ntype: daily\n---\n\n## 🙏 Hábitos\n\n## ✅ Inbox\n\n## 📒 Anotações\n`;
+      const created = await app.vault.create(journalPath, content);
+      openFile(created);
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar nota diária", error);
+      new Notice(`Não foi possível criar a nota diária: ${journalPath}`);
+    }
+  };
+
   const createTaskFromTemplate = async () => {
     if (creatingTask) return;
 
@@ -299,9 +347,17 @@ export function HomeView({
   return (
     <div className="smart-notes-home-view">
       <div className="smart-notes-home-header">
-        <h1 className="smart-notes-home-title">
+        <h1>
+          <button
+            type="button"
+            className="smart-notes-home-title"
+            onClick={() => void openTodayJournal()}
+            aria-label="Abrir ou criar a nota diária de hoje"
+            title="Abrir ou criar a nota diária de hoje"
+          >
           <TitleIcon icon="home" />
           <span>Smart Notes Home</span>
+          </button>
         </h1>
       </div>
 
