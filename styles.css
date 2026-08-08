@@ -1088,7 +1088,9 @@
 
   .smart-notes-habits-mobile-table {
     width: 100%;
+    margin-top: 2px;
     border-collapse: collapse;
+    border-top: 1px solid var(--background-modifier-border);
     font-size: 0.72rem;
   }
 
@@ -1110,6 +1112,7 @@
     font-weight: 700;
     color: var(--text-muted);
     background: color-mix(in srgb, var(--background-secondary) 72%, var(--background-primary));
+    border-top: 1px solid var(--background-modifier-border);
   }
 
   .smart-notes-habits-mobile-corner {
