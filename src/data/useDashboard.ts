@@ -1,4 +1,4 @@
-import { App, TFile, getAllTags } from "obsidian";
+import { App, TFile } from "obsidian";
 import { useCallback, useEffect, useState } from "react";
 import { BookRecord } from "../types";
 import { toBookRecord } from "./bookRecord";
@@ -162,11 +162,7 @@ function computeDashboard(app: App): DashboardData {
     const maybeTask = toTask(app, file);
     if (maybeTask) tasks.push(maybeTask);
 
-    const tags = cache ? getAllTags(cache) ?? [] : [];
-    const isConfession = tags.some(
-      (tag) => tag.normalize("NFC").toLocaleLowerCase("pt-BR") === "#confissão"
-    );
-    if (isConfession) {
+    if (fm.type === "confession") {
       const confessionDate = toDate(fm["Data da confissão"]);
       if (confessionDate) {
         const confessionStart = startOfDay(confessionDate);

@@ -78,15 +78,14 @@ npm run saints:validate
 
 ### Dias desde a última confissão
 
-O card **Desde a última confissão** usa os mesmos critérios da view
-`processed/Confissões.base`, mas consulta diretamente os metadados Markdown pelo
-`metadataCache` do Obsidian. O arquivo `.base` é uma configuração de visualização,
-não um banco de dados separado; por isso, as notas continuam sendo a fonte da
-verdade.
+O card **Desde a última confissão** consulta diretamente os metadados Markdown
+pelo `metadataCache` do Obsidian. O arquivo `.base` é uma configuração de
+visualização, não um banco de dados separado; por isso, as notas continuam sendo
+a fonte da verdade.
 
 Uma nota entra no cálculo quando:
 
-- possui a tag `#confissão`;
+- possui a propriedade `type: confession`;
 - possui a propriedade `Data da confissão` com uma data válida;
 - a data não está no futuro;
 - não está dentro da pasta `templates/`.
@@ -97,6 +96,7 @@ Formato esperado:
 ---
 tags:
   - confissão
+type: confession
 Data da confissão: 2026-07-11
 ---
 ```
