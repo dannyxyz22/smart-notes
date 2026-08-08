@@ -1197,6 +1197,75 @@
     padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
+  .smart-notes-home-header {
+    display: none;
+  }
+
+  .smart-notes-home-daily-progress {
+    margin: 0 0 10px;
+    padding: 11px 12px;
+    border-color: color-mix(in srgb, var(--interactive-accent) 46%, var(--background-modifier-border));
+    border-left-width: 3px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--interactive-accent) 13%, var(--background-primary)),
+      color-mix(in srgb, var(--interactive-accent) 5%, var(--background-secondary))
+    );
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  }
+
+  .smart-notes-home-view button.smart-notes-home-daily-progress-link {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+
+  .smart-notes-home-daily-progress-link:hover {
+    color: var(--text-accent);
+  }
+
+  .smart-notes-home-daily-progress-link .smart-notes-title-icon,
+  .smart-notes-home-daily-progress-link .smart-notes-title-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .smart-notes-saint-card {
+    gap: 9px;
+    margin-bottom: 10px;
+    padding: 10px 11px;
+  }
+
+  .smart-notes-saint-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .smart-notes-saint-card h2 {
+    font-size: 0.95rem;
+  }
+
+  .smart-notes-saint-link {
+    font-size: 0.72rem;
+  }
+
+  .smart-notes-home-stats {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .smart-notes-home-stats .smart-notes-stat-card {
+    padding: 8px 9px;
+  }
+
+  .smart-notes-home-stats .smart-notes-stat-value {
+    margin-top: 2px;
+    font-size: 1.28rem;
+  }
+
   .smart-notes-habits-desktop {
     display: none;
   }

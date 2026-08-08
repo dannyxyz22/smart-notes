@@ -468,6 +468,50 @@ export function HomeView({
         </h1>
       </div>
 
+      <div className="smart-notes-habits-mobile-summary smart-notes-home-daily-progress">
+        <div className="smart-notes-habits-mobile-summary-heading">
+          <button
+            type="button"
+            className="smart-notes-home-daily-progress-link"
+            onClick={() => void openTodayJournal()}
+            aria-label="Abrir a nota diária de hoje"
+            title="Abrir a nota diária de hoje"
+          >
+            <TitleIcon icon="activity" />
+            <span>Progresso de hoje</span>
+          </button>
+          <span className="smart-notes-habits-mobile-summary-count">
+            {todayHabitProgress
+              ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`
+              : "Sem registro de hoje"}
+          </span>
+        </div>
+        <div
+          className="smart-notes-habit-progress smart-notes-habits-mobile-today-progress"
+          role="progressbar"
+          aria-label="Hábitos concluídos hoje"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={todayHabitProgress?.percent ?? 0}
+          aria-valuetext={
+            todayHabitProgress
+              ? `${todayHabitProgress.done} de ${todayHabitProgress.total} hábitos concluídos`
+              : "Sem registro de hoje"
+          }
+        >
+          <span
+            className="smart-notes-habit-progress-fill"
+            style={{
+              width: `${todayHabitProgress?.percent ?? 0}%`,
+              backgroundColor: scoreColor(todayHabitProgress?.percent ?? 0),
+            }}
+          />
+          <span className="smart-notes-habit-progress-label">
+            {todayHabitProgress?.percent ?? 0}%
+          </span>
+        </div>
+      </div>
+
       {saintOfDay ? (
         <section className="smart-notes-saint-card" aria-labelledby="smart-notes-saint-name">
           <div className="smart-notes-saint-icon">
@@ -709,40 +753,6 @@ export function HomeView({
           </select>
         </div>
         <p className="smart-notes-muted smart-notes-habits-caption">Exibindo: {habitsWindowLabel}</p>
-        <div className="smart-notes-habits-mobile-summary">
-          <div className="smart-notes-habits-mobile-summary-heading">
-            <span>Progresso de hoje</span>
-            <span className="smart-notes-habits-mobile-summary-count">
-              {todayHabitProgress
-                ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`
-                : "Sem registro de hoje"}
-            </span>
-          </div>
-          <div
-            className="smart-notes-habit-progress smart-notes-habits-mobile-today-progress"
-            role="progressbar"
-            aria-label="Hábitos concluídos hoje"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={todayHabitProgress?.percent ?? 0}
-            aria-valuetext={
-              todayHabitProgress
-                ? `${todayHabitProgress.done} de ${todayHabitProgress.total} hábitos concluídos`
-                : "Sem registro de hoje"
-            }
-          >
-            <span
-              className="smart-notes-habit-progress-fill"
-              style={{
-                width: `${todayHabitProgress?.percent ?? 0}%`,
-                backgroundColor: scoreColor(todayHabitProgress?.percent ?? 0),
-              }}
-            />
-            <span className="smart-notes-habit-progress-label">
-              {todayHabitProgress?.percent ?? 0}%
-            </span>
-          </div>
-        </div>
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
         ) : (
