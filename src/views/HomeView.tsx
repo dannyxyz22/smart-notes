@@ -250,6 +250,8 @@ export function HomeView({
   const completedPriorityCount = todayPriorityTasks.filter((task) =>
     completedTodayPaths.has(task.file.path)
   ).length;
+  const allPriorityTasksCompleted =
+    todayPriorityTasks.length > 0 && completedPriorityCount === todayPriorityTasks.length;
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
   const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
@@ -683,7 +685,7 @@ export function HomeView({
       </div>
 
       <section
-        className={`smart-notes-mobile-priorities${completedPriorityCount > 0 ? " has-completed" : ""}`}
+        className={`smart-notes-mobile-priorities${completedPriorityCount > 0 ? " has-completed" : ""}${allPriorityTasksCompleted ? " all-completed" : ""}`}
         aria-labelledby="smart-notes-mobile-priorities-title"
       >
         <div className="smart-notes-mobile-priorities-header">
@@ -692,9 +694,18 @@ export function HomeView({
             <span>Tarefas principais de hoje</span>
           </h2>
           <span className="smart-notes-mobile-priorities-count">
-            {completedPriorityCount}/{todayPriorityTasks.length} concluídas
+            {allPriorityTasksCompleted
+              ? "Dia concluído!"
+              : `${completedPriorityCount}/${todayPriorityTasks.length} concluídas`}
           </span>
         </div>
+        {allPriorityTasksCompleted ? (
+          <div className="smart-notes-priorities-reward" role="status">
+            <TitleIcon icon="trophy" />
+            <span>Missão cumprida — todas as tarefas do dia foram concluídas!</span>
+            <TitleIcon icon="sparkles" />
+          </div>
+        ) : null}
         {todayPriorityTasks.length === 0 ? (
           <p className="smart-notes-mobile-priorities-empty">
             Nenhuma tarefa com Do date para hoje.
