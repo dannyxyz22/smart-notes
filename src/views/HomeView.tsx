@@ -470,18 +470,24 @@ export function HomeView({
         </h1>
       </div>
 
-      <div className="smart-notes-habits-mobile-summary smart-notes-home-daily-progress">
+      <div
+        className="smart-notes-habits-mobile-summary smart-notes-home-daily-progress"
+        role="link"
+        tabIndex={0}
+        aria-label="Abrir ou criar a nota diária de hoje"
+        onClick={() => void openTodayJournal()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void openTodayJournal();
+          }
+        }}
+      >
         <div className="smart-notes-habits-mobile-summary-heading">
-          <button
-            type="button"
-            className="smart-notes-home-daily-progress-link"
-            onClick={() => void openTodayJournal()}
-            aria-label="Abrir a nota diária de hoje"
-            title="Abrir a nota diária de hoje"
-          >
+          <span className="smart-notes-home-daily-progress-link">
             <TitleIcon icon="activity" />
             <span>Progresso de hoje</span>
-          </button>
+          </span>
           <span className="smart-notes-habits-mobile-summary-count">
             {todayHabitProgress
               ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`

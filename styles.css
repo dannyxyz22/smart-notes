@@ -1278,18 +1278,22 @@
       color-mix(in srgb, var(--interactive-accent) 5%, var(--background-secondary))
     );
     box-shadow: 0 6px 16px color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+    cursor: pointer;
   }
 
-  .smart-notes-home-view button.smart-notes-home-daily-progress-link {
-    all: unset;
+  .smart-notes-home-daily-progress:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+  }
+
+  .smart-notes-home-daily-progress-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     color: var(--text-normal);
-    cursor: pointer;
   }
 
-  .smart-notes-home-daily-progress-link:hover {
+  .smart-notes-home-daily-progress:hover .smart-notes-home-daily-progress-link {
     color: var(--text-accent);
   }
 
