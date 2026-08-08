@@ -27,6 +27,7 @@ export interface DashboardData {
   recentNotes: TFile[];
   openTasks: DashboardTask[];
   completedToday: DashboardTask[];
+  todayTasks: DashboardTask[];
   upcomingTasks: DashboardTask[];
   lastConfession: DashboardConfession | null;
   links: DashboardLink[];
@@ -200,6 +201,13 @@ function computeDashboard(app: App): DashboardData {
     return false;
   });
 
+  const todayTasks = [...tasks]
+    .filter((task) => task.dueDate && isSameDay(task.dueDate, now))
+    .sort((left, right) => {
+      const dateOrder = (left.dueDate?.getTime() ?? 0) - (right.dueDate?.getTime() ?? 0);
+      return dateOrder || left.title.localeCompare(right.title);
+    });
+
   const upcomingTasks = [...openTasks]
     .filter((task) => task.dueDate)
     .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0));
@@ -224,6 +232,7 @@ function computeDashboard(app: App): DashboardData {
     recentNotes,
     openTasks,
     completedToday,
+    todayTasks,
     upcomingTasks,
     lastConfession,
     links,

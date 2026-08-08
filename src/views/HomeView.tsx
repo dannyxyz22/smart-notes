@@ -242,6 +242,11 @@ export function HomeView({
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
   const visibleInboxNotes = data.inboxNotes.slice(0, 10);
   const hiddenInboxCount = Math.max(0, data.inboxNotes.length - visibleInboxNotes.length);
+  const todayPriorityTasks = data.todayTasks.slice(0, 3);
+  const completedTodayPaths = new Set(data.completedToday.map((task) => task.file.path));
+  const completedPriorityCount = todayPriorityTasks.filter((task) =>
+    completedTodayPaths.has(task.file.path)
+  ).length;
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
   const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
@@ -603,6 +608,42 @@ export function HomeView({
           </div>
         </div>
       </div>
+
+      <section
+        className={`smart-notes-mobile-priorities${completedPriorityCount > 0 ? " has-completed" : ""}`}
+        aria-labelledby="smart-notes-mobile-priorities-title"
+      >
+        <div className="smart-notes-mobile-priorities-header">
+          <h2 id="smart-notes-mobile-priorities-title" className="smart-notes-title-with-icon">
+            <TitleIcon icon="target" />
+            <span>3 tarefas principais</span>
+          </h2>
+          <span className="smart-notes-mobile-priorities-count">
+            {completedPriorityCount}/3 concluídas
+          </span>
+        </div>
+        {todayPriorityTasks.length === 0 ? (
+          <p className="smart-notes-mobile-priorities-empty">
+            Nenhuma tarefa com Do date para hoje.
+          </p>
+        ) : (
+          <ol className="smart-notes-mobile-priorities-list">
+            {todayPriorityTasks.map((task) => {
+              const completedToday = completedTodayPaths.has(task.file.path);
+              return (
+                <li key={task.file.path} className={completedToday ? "is-completed" : undefined}>
+                  <button type="button" onClick={() => openFile(task.file)}>
+                    <span className="smart-notes-mobile-priority-status">
+                      <TitleIcon icon={completedToday ? "circle-check-big" : "circle"} />
+                    </span>
+                    <span className="smart-notes-mobile-priority-title">{task.title}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
 
       <div className="smart-notes-panel smart-notes-panel-wide smart-notes-habits-panel">
         <div className="smart-notes-panel-header-inline">

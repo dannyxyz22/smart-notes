@@ -270,6 +270,10 @@
   margin-bottom: 12px;
 }
 
+.smart-notes-mobile-priorities {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .smart-notes-saint-card {
     grid-template-columns: auto minmax(0, 1fr);
@@ -280,6 +284,117 @@
     grid-column: 2;
     justify-self: start;
     white-space: normal;
+  }
+
+  .smart-notes-mobile-priorities {
+    display: block;
+    margin: 0 0 12px;
+    padding: 11px;
+    border: 1px solid color-mix(in srgb, var(--interactive-accent) 38%, var(--background-modifier-border));
+    border-radius: 10px;
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--interactive-accent) 9%, var(--background-secondary)),
+      color-mix(in srgb, var(--background-secondary) 88%, var(--background-primary))
+    );
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--background-primary) 84%, transparent);
+  }
+
+  .smart-notes-mobile-priorities.has-completed {
+    border-color: color-mix(in srgb, var(--text-success) 58%, var(--background-modifier-border));
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--text-success) 12%, transparent);
+  }
+
+  .smart-notes-mobile-priorities-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+
+  .smart-notes-mobile-priorities-header h2 {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  .smart-notes-mobile-priorities-count {
+    flex-shrink: 0;
+    padding: 3px 7px;
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .smart-notes-mobile-priorities.has-completed .smart-notes-mobile-priorities-count {
+    color: var(--text-success);
+    background: color-mix(in srgb, var(--text-success) 13%, var(--background-primary));
+  }
+
+  .smart-notes-mobile-priorities-list {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .smart-notes-mobile-priorities-list li {
+    border: 1px solid color-mix(in srgb, var(--interactive-accent) 24%, var(--background-modifier-border));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--interactive-accent) 5%, var(--background-primary));
+  }
+
+  .smart-notes-mobile-priorities-list li.is-completed {
+    border-color: color-mix(in srgb, var(--text-success) 55%, var(--background-modifier-border));
+    background: color-mix(in srgb, var(--text-success) 12%, var(--background-primary));
+  }
+
+  .smart-notes-home-view .smart-notes-mobile-priorities-list button {
+    all: unset;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 9px;
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+
+  .smart-notes-mobile-priorities-list button:hover {
+    color: var(--text-accent);
+  }
+
+  .smart-notes-mobile-priority-status,
+  .smart-notes-mobile-priority-status .smart-notes-title-icon,
+  .smart-notes-mobile-priority-status svg {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+  }
+
+  .smart-notes-mobile-priority-status {
+    color: var(--interactive-accent);
+  }
+
+  .smart-notes-mobile-priorities-list li.is-completed .smart-notes-mobile-priority-status {
+    color: var(--text-success);
+  }
+
+  .smart-notes-mobile-priorities-list li.is-completed .smart-notes-mobile-priority-title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-success);
+  }
+
+  .smart-notes-mobile-priorities-empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.76rem;
   }
 }
 
