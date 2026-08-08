@@ -245,7 +245,7 @@ export function HomeView({
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
   const visibleInboxNotes = data.inboxNotes.slice(0, 10);
   const hiddenInboxCount = Math.max(0, data.inboxNotes.length - visibleInboxNotes.length);
-  const todayPriorityTasks = data.todayTasks.slice(0, 3);
+  const todayPriorityTasks = data.todayTasks;
   const completedTodayPaths = new Set(data.completedToday.map((task) => task.file.path));
   const completedPriorityCount = todayPriorityTasks.filter((task) =>
     completedTodayPaths.has(task.file.path)
@@ -689,10 +689,10 @@ export function HomeView({
         <div className="smart-notes-mobile-priorities-header">
           <h2 id="smart-notes-mobile-priorities-title" className="smart-notes-title-with-icon">
             <TitleIcon icon="target" />
-            <span>3 tarefas principais</span>
+            <span>Tarefas principais de hoje</span>
           </h2>
           <span className="smart-notes-mobile-priorities-count">
-            {completedPriorityCount}/3 concluídas
+            {completedPriorityCount}/{todayPriorityTasks.length} concluídas
           </span>
         </div>
         {todayPriorityTasks.length === 0 ? (
