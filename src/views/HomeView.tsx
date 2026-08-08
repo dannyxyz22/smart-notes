@@ -38,6 +38,7 @@ interface CommunityPluginRegistry {
 
 const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
 const PERSON_TEMPLATE_PATH = "templates/Pessoa.md";
+const NEW_NOTE_TEMPLATE_PATH = "templates/Nova nota.md";
 const DAILY_NOTE_FOLDER = "journal";
 const DAILY_NOTE_TEMPLATE_PATH = "templates/Diário.md";
 
@@ -204,6 +205,7 @@ export function HomeView({
 }: HomeViewProps) {
   const [creatingTask, setCreatingTask] = React.useState(false);
   const [creatingPerson, setCreatingPerson] = React.useState(false);
+  const [creatingInboxNote, setCreatingInboxNote] = React.useState(false);
   const habitsWindowDays =
     _settings.habitsWindowPreset === "today"
       ? 1
@@ -371,6 +373,38 @@ export function HomeView({
     }
   };
 
+  const createInboxNoteFromTemplate = async () => {
+    if (creatingInboxNote) return;
+
+    const template = app.vault.getAbstractFileByPath(NEW_NOTE_TEMPLATE_PATH);
+    if (!(template instanceof TFile)) {
+      new Notice(`Template não encontrado: ${NEW_NOTE_TEMPLATE_PATH}`);
+      return;
+    }
+
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (!templater?.create_new_note_from_template) {
+      new Notice("Ative o plugin Templater para criar uma nova nota.");
+      return;
+    }
+
+    setCreatingInboxNote(true);
+    try {
+      // Sem pasta de destino: respeita a pasta padrão configurada no Templater.
+      await templater.create_new_note_from_template(template, undefined, undefined, true);
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar nota com Templater", error);
+      new Notice("Não foi possível criar a nota com o Templater.");
+    } finally {
+      setCreatingInboxNote(false);
+    }
+  };
+
   const fileHref = (file: TFile | null | undefined): string => {
     if (!file) return "#";
     return `obsidian://open?vault=${encodeURIComponent(app.vault.getName())}&file=${encodeURIComponent(file.path)}`;
@@ -515,8 +549,37 @@ export function HomeView({
           ) : null}
         </div>
         <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Inbox</div>
-          <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
+          <div className="smart-notes-stat-label">
+            <a
+              className={`smart-notes-stat-link${inboxProcessingLink?.file ? "" : " is-disabled"}`}
+              href={fileHref(inboxProcessingLink?.file)}
+              onClick={(event) => {
+                if (!inboxProcessingLink?.file) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                openFile(inboxProcessingLink.file);
+              }}
+            >
+              <TitleIcon icon="inbox" />
+              <span>Inbox</span>
+            </a>
+          </div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={() => void createInboxNoteFromTemplate()}
+              disabled={creatingInboxNote}
+              aria-label="Criar nova nota com o template Nova nota"
+              title="Criar nova nota com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingInboxNote ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
         </div>
         <div className="smart-notes-stat-card">
           <div className="smart-notes-stat-label">Finalizadas hoje</div>
