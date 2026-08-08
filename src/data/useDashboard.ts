@@ -55,7 +55,7 @@ const HOME_LINKS = [
     path: "processed/Wishlist - Lista de livros católicos",
   },
   { label: "Biblioteca", path: "processed/Biblioteca.base" },
-  { label: "Confissões", path: "processed/Confissões.base" },
+  { label: "Confissões", path: "processed/Confissões.md" },
 ];
 
 function isSameDay(left: Date, right: Date): boolean {

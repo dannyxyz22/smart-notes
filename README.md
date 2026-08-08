@@ -76,6 +76,43 @@ npm run saints:update
 npm run saints:validate
 ```
 
+### Dias desde a última confissão
+
+O card **Desde a última confissão** usa os mesmos critérios da view
+`processed/Confissões.base`, mas consulta diretamente os metadados Markdown pelo
+`metadataCache` do Obsidian. O arquivo `.base` é uma configuração de visualização,
+não um banco de dados separado; por isso, as notas continuam sendo a fonte da
+verdade.
+
+Uma nota entra no cálculo quando:
+
+- possui a tag `#confissão`;
+- possui a propriedade `Data da confissão` com uma data válida;
+- a data não está no futuro;
+- não está dentro da pasta `templates/`.
+
+Formato esperado:
+
+```yaml
+---
+tags:
+  - confissão
+Data da confissão: 2026-07-11
+---
+```
+
+O hook `useDashboard` percorre as notas elegíveis e mantém aquela com a maior
+`Data da confissão`. A Home compara essa data com o dia local atual, considerando
+somente as datas do calendário, sem horários. A diferença é calculada em UTC a
+partir dos componentes ano, mês e dia para evitar resultados incorretos em
+mudanças de fuso horário ou horário de verão. Por exemplo, entre `2026-07-11` e
+`2026-08-08` são exibidos **28 dias**.
+
+O número é recalculado após a meia-noite e quando uma nota é criada, modificada,
+renomeada ou excluída. O título do card abre `processed/Confissões.md`; a data
+mostrada abaixo do número abre a nota da última confissão. Se nenhuma nota válida
+for encontrada, o card exibe `—` e a mensagem “Nenhuma data encontrada”.
+
 ### Tarefas
 
 O hook `useDashboard` detecta tarefas pela propriedade `type: task`. Campos relevantes:
