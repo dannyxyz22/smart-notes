@@ -484,31 +484,6 @@ export function HomeView({
             </button>
           </div>
         </div>
-        <div className="smart-notes-stat-card smart-notes-task-stat-card">
-          <div className="smart-notes-stat-label">Tarefas abertas</div>
-          <div className="smart-notes-stat-main-row">
-            <div className="smart-notes-stat-value">{data.openTasks.length}</div>
-            <button
-              type="button"
-              className="smart-notes-stat-action"
-              onClick={() => void createTaskFromTemplate()}
-              disabled={creatingTask}
-              aria-label="Criar nova tarefa com o template Tarefa"
-              title="Criar nova tarefa com o Templater"
-            >
-              <TitleIcon icon="plus" />
-              <span>{creatingTask ? "Criando…" : "Nova"}</span>
-            </button>
-          </div>
-        </div>
-        <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Finalizadas hoje</div>
-          <div className="smart-notes-stat-value">{data.completedToday.length}</div>
-        </div>
-        <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Inbox</div>
-          <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
-        </div>
         <div className="smart-notes-stat-card smart-notes-confession-stat-card">
           <div className="smart-notes-stat-label">
             <a
@@ -538,6 +513,31 @@ export function HomeView({
           {!data.lastConfession ? (
             <div className="smart-notes-confession-empty">Nenhuma data encontrada</div>
           ) : null}
+        </div>
+        <div className="smart-notes-stat-card">
+          <div className="smart-notes-stat-label">Inbox</div>
+          <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
+        </div>
+        <div className="smart-notes-stat-card">
+          <div className="smart-notes-stat-label">Finalizadas hoje</div>
+          <div className="smart-notes-stat-value">{data.completedToday.length}</div>
+        </div>
+        <div className="smart-notes-stat-card smart-notes-task-stat-card">
+          <div className="smart-notes-stat-label">Tarefas abertas</div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.openTasks.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={() => void createTaskFromTemplate()}
+              disabled={creatingTask}
+              aria-label="Criar nova tarefa com o template Tarefa"
+              title="Criar nova tarefa com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingTask ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
         </div>
       </div>
 
