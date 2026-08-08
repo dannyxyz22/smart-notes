@@ -1,6 +1,6 @@
 import * as React from "react";
 import { App, Notice, TFile, WorkspaceLeaf, setIcon } from "obsidian";
-import { useDashboard } from "../data/useDashboard";
+import { DashboardTask, useDashboard } from "../data/useDashboard";
 import { useHabitsTracker } from "../data/useHabitsTracker";
 import { getSaintOfDay } from "../data/saints";
 import { HabitsWindowPreset, SmartNotesSettings } from "../settings";
@@ -206,6 +206,9 @@ export function HomeView({
   const [creatingTask, setCreatingTask] = React.useState(false);
   const [creatingPerson, setCreatingPerson] = React.useState(false);
   const [creatingInboxNote, setCreatingInboxNote] = React.useState(false);
+  const [updatingTaskPaths, setUpdatingTaskPaths] = React.useState<Set<string>>(
+    () => new Set()
+  );
   const habitsWindowDays =
     _settings.habitsWindowPreset === "today"
       ? 1
@@ -258,6 +261,32 @@ export function HomeView({
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
+  };
+
+  const toggleTaskDone = async (task: DashboardTask) => {
+    if (updatingTaskPaths.has(task.file.path)) return;
+
+    setUpdatingTaskPaths((current) => new Set(current).add(task.file.path));
+    try {
+      await app.fileManager.processFrontMatter(task.file, (frontmatter) => {
+        const nextDone = !task.done;
+        if (typeof frontmatter.Done === "boolean" || typeof frontmatter.done !== "boolean") {
+          frontmatter.Done = nextDone;
+        } else {
+          frontmatter.done = nextDone;
+        }
+        frontmatter.modified = new Date().toISOString();
+      });
+    } catch (error) {
+      console.error("Smart Notes: erro ao atualizar Done da tarefa", error);
+      new Notice(`Não foi possível atualizar a tarefa: ${task.title}`);
+    } finally {
+      setUpdatingTaskPaths((current) => {
+        const next = new Set(current);
+        next.delete(task.file.path);
+        return next;
+      });
+    }
   };
 
   const openTodayJournal = async () => {
@@ -630,12 +659,24 @@ export function HomeView({
           <ol className="smart-notes-mobile-priorities-list">
             {todayPriorityTasks.map((task) => {
               const completedToday = completedTodayPaths.has(task.file.path);
+              const updating = updatingTaskPaths.has(task.file.path);
               return (
                 <li key={task.file.path} className={completedToday ? "is-completed" : undefined}>
-                  <button type="button" onClick={() => openFile(task.file)}>
-                    <span className="smart-notes-mobile-priority-status">
-                      <TitleIcon icon={completedToday ? "circle-check-big" : "circle"} />
-                    </span>
+                  <button
+                    type="button"
+                    className="smart-notes-mobile-priority-toggle"
+                    onClick={() => void toggleTaskDone(task)}
+                    disabled={updating}
+                    aria-label={`${task.done ? "Desmarcar" : "Marcar"} ${task.title} como concluída`}
+                    title={task.done ? "Desmarcar como concluída" : "Marcar como concluída"}
+                  >
+                    <TitleIcon icon={task.done ? "square-check-big" : "square"} />
+                  </button>
+                  <button
+                    type="button"
+                    className="smart-notes-mobile-priority-open"
+                    onClick={() => openFile(task.file)}
+                  >
                     <span className="smart-notes-mobile-priority-title">{task.title}</span>
                   </button>
                 </li>
