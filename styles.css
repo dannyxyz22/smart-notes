@@ -1042,6 +1042,10 @@
 }
 
 @media (max-width: 720px) {
+  .smart-notes-home-view {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
   .smart-notes-habits-desktop {
     display: none;
   }
