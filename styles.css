@@ -328,12 +328,13 @@
 
 .smart-notes-mobile-priorities-list li {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  align-items: stretch;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--interactive-accent) 24%, var(--background-modifier-border));
   border-radius: 8px;
   background: color-mix(in srgb, var(--interactive-accent) 5%, var(--background-primary));
-  overflow: hidden;
 }
 
 .smart-notes-mobile-priorities-list li.is-completed {
@@ -352,17 +353,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  width: 28px;
+  height: 28px;
   color: var(--interactive-accent);
-  border-right: 1px solid color-mix(in srgb, var(--interactive-accent) 18%, var(--background-modifier-border));
 }
 
 .smart-notes-home-view .smart-notes-mobile-priority-open {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 40px;
-  padding: 9px 11px;
+  min-height: 28px;
+  padding: 0;
 }
 
 .smart-notes-mobile-priority-toggle:hover,
