@@ -22,6 +22,7 @@ export interface DashboardConfession {
 
 export interface DashboardData {
   books: BookRecord[];
+  people: TFile[];
   inboxNotes: TFile[];
   recentNotes: TFile[];
   openTasks: DashboardTask[];
@@ -141,12 +142,18 @@ function isInboxPath(path: string): boolean {
   return path.toLowerCase().startsWith("inbox/");
 }
 
+function hasType(value: unknown, expected: string): boolean {
+  if (typeof value === "string") return value === expected;
+  return Array.isArray(value) && value.includes(expected);
+}
+
 function computeDashboard(app: App): DashboardData {
   const now = new Date();
   const markdownFiles = app.vault
     .getMarkdownFiles()
     .filter((file) => !isTemplatePath(file.path));
   const books: BookRecord[] = [];
+  const people: TFile[] = [];
   const tasks: DashboardTask[] = [];
   const inboxNotes: TFile[] = [];
   let lastConfession: DashboardConfession | null = null;
@@ -158,6 +165,8 @@ function computeDashboard(app: App): DashboardData {
 
     const maybeBook = toBookRecord(file, fm);
     if (maybeBook) books.push(maybeBook);
+
+    if (hasType(fm.type, "person")) people.push(file);
 
     const maybeTask = toTask(app, file);
     if (maybeTask) tasks.push(maybeTask);
@@ -205,10 +214,12 @@ function computeDashboard(app: App): DashboardData {
   });
 
   books.sort((a, b) => a.title.localeCompare(b.title));
+  people.sort((a, b) => a.basename.localeCompare(b.basename));
   inboxNotes.sort((a, b) => b.stat.mtime - a.stat.mtime);
 
   return {
     books,
+    people,
     inboxNotes,
     recentNotes,
     openTasks,

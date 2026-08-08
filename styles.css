@@ -315,6 +315,23 @@
   border-color: color-mix(in srgb, var(--interactive-accent) 48%, var(--background-modifier-border));
 }
 
+.smart-notes-home-stats .smart-notes-stat-card:nth-child(6) {
+  border-color: color-mix(in srgb, var(--smart-notes-warm-2) 44%, var(--background-modifier-border));
+}
+
+.smart-notes-people-stat-card:not(.is-disabled) {
+  cursor: pointer;
+}
+
+.smart-notes-people-stat-card:not(.is-disabled):hover .smart-notes-stat-link {
+  color: var(--text-accent);
+}
+
+.smart-notes-people-stat-card:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 .smart-notes-stat-label {
   color: var(--text-muted);
   font-size: 0.8rem;

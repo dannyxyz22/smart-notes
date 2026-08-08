@@ -37,6 +37,7 @@ interface CommunityPluginRegistry {
 }
 
 const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
+const PERSON_TEMPLATE_PATH = "templates/Pessoa.md";
 const DAILY_NOTE_FOLDER = "journal";
 const DAILY_NOTE_TEMPLATE_PATH = "templates/Diário.md";
 
@@ -202,6 +203,7 @@ export function HomeView({
   onHabitsWindowPresetChange,
 }: HomeViewProps) {
   const [creatingTask, setCreatingTask] = React.useState(false);
+  const [creatingPerson, setCreatingPerson] = React.useState(false);
   const habitsWindowDays =
     _settings.habitsWindowPreset === "today"
       ? 1
@@ -241,6 +243,7 @@ export function HomeView({
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
   const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
+  const pessoasLink = data.links.find((item) => item.label === "Pessoas") ?? null;
   const confissoesLink = data.links.find((item) => item.label === "Confissões") ?? null;
   const daysSinceLastConfession = data.lastConfession
     ? calendarDaysBetween(currentDate, data.lastConfession.date)
@@ -332,6 +335,42 @@ export function HomeView({
     }
   };
 
+  const createPersonFromTemplate = async () => {
+    if (creatingPerson) return;
+
+    const template = app.vault.getAbstractFileByPath(PERSON_TEMPLATE_PATH);
+    if (!(template instanceof TFile)) {
+      new Notice(`Template não encontrado: ${PERSON_TEMPLATE_PATH}`);
+      return;
+    }
+
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (!templater?.create_new_note_from_template) {
+      new Notice("Ative o plugin Templater para criar uma nova pessoa.");
+      return;
+    }
+
+    setCreatingPerson(true);
+    try {
+      await templater.create_new_note_from_template(
+        template,
+        undefined,
+        undefined,
+        true
+      );
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar pessoa com Templater", error);
+      new Notice("Não foi possível criar a pessoa com o Templater.");
+    } finally {
+      setCreatingPerson(false);
+    }
+  };
+
   const fileHref = (file: TFile | null | undefined): string => {
     if (!file) return "#";
     return `obsidian://open?vault=${encodeURIComponent(app.vault.getName())}&file=${encodeURIComponent(file.path)}`;
@@ -405,6 +444,45 @@ export function HomeView({
             </a>
           </div>
           <div className="smart-notes-stat-value">{data.books.length}</div>
+        </div>
+        <div
+          className={`smart-notes-stat-card smart-notes-people-stat-card${pessoasLink?.file ? "" : " is-disabled"}`}
+          role="link"
+          tabIndex={pessoasLink?.file ? 0 : -1}
+          aria-label="Abrir Pessoas"
+          aria-disabled={!pessoasLink?.file}
+          onClick={() => pessoasLink?.file && openFile(pessoasLink.file)}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget || !pessoasLink?.file) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openFile(pessoasLink.file);
+            }
+          }}
+        >
+          <div className="smart-notes-stat-label">
+            <span className={`smart-notes-stat-link${pessoasLink?.file ? "" : " is-disabled"}`}>
+              <TitleIcon icon="users" />
+              <span>Pessoas</span>
+            </span>
+          </div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.people.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={(event) => {
+                event.stopPropagation();
+                void createPersonFromTemplate();
+              }}
+              disabled={creatingPerson}
+              aria-label="Criar nova pessoa com o template Pessoa"
+              title="Criar nova pessoa com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingPerson ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
         </div>
         <div className="smart-notes-stat-card smart-notes-task-stat-card">
           <div className="smart-notes-stat-label">Tarefas abertas</div>
