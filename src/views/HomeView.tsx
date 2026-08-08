@@ -401,18 +401,9 @@ export function HomeView({
               </span>
             ) : null}
           </div>
-          {data.lastConfession ? (
-            <button
-              type="button"
-              className="smart-notes-confession-date"
-              onClick={() => openFile(data.lastConfession!.file)}
-              title="Abrir a nota da última confissão"
-            >
-              Última: {formatDate(data.lastConfession.date)}
-            </button>
-          ) : (
+          {!data.lastConfession ? (
             <div className="smart-notes-confession-empty">Nenhuma data encontrada</div>
-          )}
+          ) : null}
         </div>
       </div>
 

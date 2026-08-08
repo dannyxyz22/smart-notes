@@ -109,9 +109,9 @@ mudanças de fuso horário ou horário de verão. Por exemplo, entre `2026-07-11
 `2026-08-08` são exibidos **28 dias**.
 
 O número é recalculado após a meia-noite e quando uma nota é criada, modificada,
-renomeada ou excluída. O título do card abre `processed/Confissões.md`; a data
-mostrada abaixo do número abre a nota da última confissão. Se nenhuma nota válida
-for encontrada, o card exibe `—` e a mensagem “Nenhuma data encontrada”.
+renomeada ou excluída. O título do card abre `processed/Confissões.md`. Se nenhuma
+nota válida for encontrada, o card exibe `—` e a mensagem “Nenhuma data
+encontrada”.
 
 ### Tarefas
 
