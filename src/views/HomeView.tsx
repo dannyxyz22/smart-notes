@@ -38,7 +38,7 @@ interface CommunityPluginRegistry {
 
 const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
 const PERSON_TEMPLATE_PATH = "templates/Pessoa.md";
-const NEW_NOTE_TEMPLATE_PATH = "templates/Nova nota.md";
+const NOTE_TEMPLATE_PATH = "templates/Nota.md";
 const DAILY_NOTE_FOLDER = "journal";
 const DAILY_NOTE_TEMPLATE_PATH = "templates/Diário.md";
 
@@ -412,9 +412,9 @@ export function HomeView({
   const createInboxNoteFromTemplate = async () => {
     if (creatingInboxNote) return;
 
-    const template = app.vault.getAbstractFileByPath(NEW_NOTE_TEMPLATE_PATH);
+    const template = app.vault.getAbstractFileByPath(NOTE_TEMPLATE_PATH);
     if (!(template instanceof TFile)) {
-      new Notice(`Template não encontrado: ${NEW_NOTE_TEMPLATE_PATH}`);
+      new Notice(`Template não encontrado: ${NOTE_TEMPLATE_PATH}`);
       return;
     }
 
@@ -659,7 +659,7 @@ export function HomeView({
               className="smart-notes-stat-action"
               onClick={() => void createInboxNoteFromTemplate()}
               disabled={creatingInboxNote}
-              aria-label="Criar nova nota com o template Nova nota"
+              aria-label="Criar nova nota com o template Nota"
               title="Criar nova nota com o Templater"
             >
               <TitleIcon icon="plus" />
