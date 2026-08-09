@@ -166,6 +166,7 @@ export function TypeFoldersView({ app }: TypeFoldersViewProps) {
   const [expandedTags, setExpandedTags] = React.useState<Set<string>>(() => new Set());
   const [query, setQuery] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [groupByTags, setGroupByTags] = React.useState(true);
   const [noteSortMode, setNoteSortMode] = React.useState<NoteSortMode>("alphabetical");
   const [alphabeticalSortDirection, setAlphabeticalSortDirection] =
     React.useState<AlphabeticalSortDirection>("ascending");
@@ -232,6 +233,16 @@ export function TypeFoldersView({ app }: TypeFoldersViewProps) {
           <span>Tipos</span>
         </div>
         <div className="smart-notes-type-folders-actions">
+          <button
+            type="button"
+            className={`smart-notes-type-sort-button${groupByTags ? " is-active" : ""}`}
+            onClick={() => setGroupByTags((current) => !current)}
+            aria-label={groupByTags ? "Desabilitar agrupamento por tags" : "Habilitar agrupamento por tags"}
+            aria-pressed={groupByTags}
+            title={groupByTags ? "Agrupamento por tags ativado" : "Agrupamento por tags desativado"}
+          >
+            <SortIcon icon="tags" />
+          </button>
           <button
             type="button"
             className={`smart-notes-type-sort-button${noteSortMode === "alphabetical" ? " is-active" : ""}`}
@@ -327,7 +338,7 @@ export function TypeFoldersView({ app }: TypeFoldersViewProps) {
                   })
             );
             const tagFolders = buildTagFolders(app, sortedFiles);
-            const subdivideByTag = tagFolders.length > 1;
+            const subdivideByTag = groupByTags && tagFolders.length > 1;
             const style = {
               "--smart-notes-type-hue": `${folder.hue}`,
             } as React.CSSProperties;
