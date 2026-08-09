@@ -3,6 +3,10 @@ import { BooksItemView, VIEW_TYPE_BOOKS } from "./views/BooksItemView";
 import { HomeItemView, VIEW_TYPE_HOME } from "./views/HomeItemView";
 import { AgendaItemView, VIEW_TYPE_AGENDA } from "./views/AgendaItemView";
 import {
+  TypeFoldersItemView,
+  VIEW_TYPE_TYPE_FOLDERS,
+} from "./views/TypeFoldersItemView";
+import {
   DEFAULT_ICS_CALENDARS,
   DEFAULT_SETTINGS,
   HabitsWindowPreset,
@@ -38,6 +42,11 @@ export default class SmartNotesBooksPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new BooksItemView(leaf)
     );
 
+    this.registerView(
+      VIEW_TYPE_TYPE_FOLDERS,
+      (leaf: WorkspaceLeaf) => new TypeFoldersItemView(leaf)
+    );
+
     this.addRibbonIcon("home", "Abrir dashboard (Smart Notes)", () => {
       this.activateHomeView();
     });
@@ -58,6 +67,12 @@ export default class SmartNotesBooksPlugin extends Plugin {
       id: "smart-notes-open-books-view",
       name: "Abrir view de Livros",
       callback: () => this.activateBooksView(),
+    });
+
+    this.addCommand({
+      id: "smart-notes-open-type-folders-view",
+      name: "Abrir painel Notas por tipo",
+      callback: () => this.activateTypeFoldersView(),
     });
 
     this.addSettingTab(new SmartNotesSettingTab(this.app, this));
@@ -81,7 +96,22 @@ export default class SmartNotesBooksPlugin extends Plugin {
     // Mantém a Agenda disponível no painel lateral, mas deixa o dashboard
     // como a última view ativada — especialmente importante no Obsidian Mobile.
     await this.activateAgendaView(false);
+    await this.activateTypeFoldersView(false);
     await this.activateHomeView();
+  }
+
+  private async activateTypeFoldersView(reveal = true): Promise<void> {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE_TYPE_FOLDERS);
+    if (existing.length > 0) {
+      if (reveal) workspace.revealLeaf(existing[0]);
+      return;
+    }
+
+    const leaf = workspace.getLeftLeaf(true);
+    if (!leaf) return;
+    await leaf.setViewState({ type: VIEW_TYPE_TYPE_FOLDERS, active: reveal });
+    if (reveal) workspace.revealLeaf(leaf);
   }
 
   private async activateAgendaView(reveal = true): Promise<void> {
