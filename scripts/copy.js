@@ -9,7 +9,7 @@ const vaultRoots = [
     path.join("C:", "Users", "Usuario", "Documents", "Obsidian Vault"),
 ];
 
-const targets = vaultRoots.flatMap((vaultRoot) =>
+const targets = vaultRoots.filter((vaultRoot) => fs.existsSync(vaultRoot)).flatMap((vaultRoot) =>
     [".obsidian", ".obsidian-desktop", ".obsidian-desktop-samsung"].map((configDirectory) =>
         path.join(vaultRoot, configDirectory, "plugins", pluginName)
     )

@@ -81,6 +81,29 @@ function parseProperty(line: string): ParsedProperty | null {
   return { name, params, value };
 }
 
+function unescapeIcsText(value: string): string {
+  let result = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "\\" || index + 1 >= value.length) {
+      result += value[index];
+      continue;
+    }
+
+    const escaped = value[index + 1];
+    if (escaped === "n" || escaped === "N") {
+      result += "\n";
+    } else if (escaped === "," || escaped === ";" || escaped === "\\") {
+      result += escaped;
+    } else {
+      result += escaped;
+    }
+    index += 1;
+  }
+
+  return result;
+}
+
 function parseIcsDate(value: string, params: Record<string, string>): ParsedDate | null {
   const valueType = params.VALUE?.toUpperCase();
   const allDay = valueType === "DATE" || /^\d{8}$/.test(value);
@@ -171,7 +194,7 @@ function parseEvents(icsText: string): RawEvent[] {
         current.uid = prop.value;
         break;
       case "SUMMARY":
-        current.summary = prop.value;
+        current.summary = unescapeIcsText(prop.value);
         break;
       case "DTSTART": {
         const start = parseIcsDate(prop.value, prop.params);

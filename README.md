@@ -56,7 +56,7 @@ O **Home dashboard** abre como aba no editor principal. A **Agenda** abre como p
 Seções exibidas:
 
 - **Santo do Dia** — destaque offline do principal santo da data, baseado no calendário do Vatican News.
-- **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox.
+- **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox e dias desde a última confissão.
 - Arquivos dentro da pasta `templates/` são ignorados em todo o dashboard.
 - **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
 - **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.
@@ -75,6 +75,43 @@ página de referência do Vatican News. Para revisar a lista em uma nova versão
 npm run saints:update
 npm run saints:validate
 ```
+
+### Dias desde a última confissão
+
+O card **Desde a última confissão** consulta diretamente os metadados Markdown
+pelo `metadataCache` do Obsidian. O arquivo `.base` é uma configuração de
+visualização, não um banco de dados separado; por isso, as notas continuam sendo
+a fonte da verdade.
+
+Uma nota entra no cálculo quando:
+
+- possui a propriedade `type: confession`;
+- possui a propriedade `Data da confissão` com uma data válida;
+- a data não está no futuro;
+- não está dentro da pasta `templates/`.
+
+Formato esperado:
+
+```yaml
+---
+tags:
+  - confissão
+type: confession
+Data da confissão: 2026-07-11
+---
+```
+
+O hook `useDashboard` percorre as notas elegíveis e mantém aquela com a maior
+`Data da confissão`. A Home compara essa data com o dia local atual, considerando
+somente as datas do calendário, sem horários. A diferença é calculada em UTC a
+partir dos componentes ano, mês e dia para evitar resultados incorretos em
+mudanças de fuso horário ou horário de verão. Por exemplo, entre `2026-07-11` e
+`2026-08-08` são exibidos **28 dias**.
+
+O número é recalculado após a meia-noite e quando uma nota é criada, modificada,
+renomeada ou excluída. O título do card abre `processed/Confissões.md`. Se nenhuma
+nota válida for encontrada, o card exibe `—` e a mensagem “Nenhuma data
+encontrada”.
 
 ### Tarefas
 

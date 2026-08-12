@@ -1,6 +1,6 @@
 import * as React from "react";
 import { App, Notice, TFile, WorkspaceLeaf, setIcon } from "obsidian";
-import { useDashboard } from "../data/useDashboard";
+import { DashboardTask, useDashboard } from "../data/useDashboard";
 import { useHabitsTracker } from "../data/useHabitsTracker";
 import { getSaintOfDay } from "../data/saints";
 import { HabitsWindowPreset, SmartNotesSettings } from "../settings";
@@ -21,7 +21,7 @@ interface HabitDayProgress {
 interface TemplaterRuntime {
   create_new_note_from_template: (
     templateFile: TFile,
-    targetFolder?: undefined,
+    targetFolder?: string,
     fileName?: string,
     openNewNote?: boolean
   ) => Promise<TFile | undefined>;
@@ -37,6 +37,10 @@ interface CommunityPluginRegistry {
 }
 
 const TASK_TEMPLATE_PATH = "templates/Tarefa.md";
+const PERSON_TEMPLATE_PATH = "templates/Pessoa.md";
+const NOTE_TEMPLATE_PATH = "templates/Nota.md";
+const DAILY_NOTE_FOLDER = "journal";
+const DAILY_NOTE_TEMPLATE_PATH = "templates/Diário.md";
 
 function calculateHabitDayProgress(
   statuses: Array<boolean | null>
@@ -124,6 +128,16 @@ function isSameDay(left: Date, right: Date): boolean {
   );
 }
 
+function calendarDaysBetween(later: Date, earlier: Date): number {
+  const laterUtc = Date.UTC(later.getFullYear(), later.getMonth(), later.getDate());
+  const earlierUtc = Date.UTC(
+    earlier.getFullYear(),
+    earlier.getMonth(),
+    earlier.getDate()
+  );
+  return Math.max(0, Math.floor((laterUtc - earlierUtc) / 86_400_000));
+}
+
 function HabitIcon({ icon, label }: { icon: string; label: string }) {
   const ref = React.useRef<HTMLSpanElement | null>(null);
 
@@ -190,6 +204,11 @@ export function HomeView({
   onHabitsWindowPresetChange,
 }: HomeViewProps) {
   const [creatingTask, setCreatingTask] = React.useState(false);
+  const [creatingPerson, setCreatingPerson] = React.useState(false);
+  const [creatingInboxNote, setCreatingInboxNote] = React.useState(false);
+  const [updatingTaskPaths, setUpdatingTaskPaths] = React.useState<Set<string>>(
+    () => new Set()
+  );
   const habitsWindowDays =
     _settings.habitsWindowPreset === "today"
       ? 1
@@ -226,12 +245,96 @@ export function HomeView({
   const hiddenUpcomingCount = Math.max(0, data.upcomingTasks.length - visibleUpcomingTasks.length);
   const visibleInboxNotes = data.inboxNotes.slice(0, 10);
   const hiddenInboxCount = Math.max(0, data.inboxNotes.length - visibleInboxNotes.length);
+  const todayPriorityTasks = data.todayTasks;
+  const completedTodayPaths = new Set(data.completedToday.map((task) => task.file.path));
+  const completedPriorityCount = todayPriorityTasks.filter((task) =>
+    completedTodayPaths.has(task.file.path)
+  ).length;
+  const allPriorityTasksCompleted =
+    todayPriorityTasks.length > 0 && completedPriorityCount === todayPriorityTasks.length;
   const calendarViewLink = data.links.find((item) => item.label === "CalendarView") ?? null;
   const inboxProcessingLink = data.links.find((item) => item.label === "Inbox processing") ?? null;
   const bibliotecaLink = data.links.find((item) => item.label === "Biblioteca") ?? null;
+  const pessoasLink = data.links.find((item) => item.label === "Pessoas") ?? null;
+  const confissoesLink = data.links.find((item) => item.label === "Confissões") ?? null;
+  const daysSinceLastConfession = data.lastConfession
+    ? calendarDaysBetween(currentDate, data.lastConfession.date)
+    : null;
 
   const openFile = (file: TFile) => {
     leaf.openFile(file);
+  };
+
+  const toggleTaskDone = async (task: DashboardTask) => {
+    if (updatingTaskPaths.has(task.file.path)) return;
+
+    setUpdatingTaskPaths((current) => new Set(current).add(task.file.path));
+    try {
+      await app.fileManager.processFrontMatter(task.file, (frontmatter) => {
+        const nextDone = !task.done;
+        if (typeof frontmatter.Done === "boolean" || typeof frontmatter.done !== "boolean") {
+          frontmatter.Done = nextDone;
+        } else {
+          frontmatter.done = nextDone;
+        }
+        frontmatter.modified = new Date().toISOString();
+      });
+    } catch (error) {
+      console.error("Smart Notes: erro ao atualizar Done da tarefa", error);
+      new Notice(`Não foi possível atualizar a tarefa: ${task.title}`);
+    } finally {
+      setUpdatingTaskPaths((current) => {
+        const next = new Set(current);
+        next.delete(task.file.path);
+        return next;
+      });
+    }
+  };
+
+  const openTodayJournal = async () => {
+    const journalPath = `${DAILY_NOTE_FOLDER}/${todayKey}.md`;
+    const existing = app.vault.getAbstractFileByPath(journalPath);
+    if (existing instanceof TFile) {
+      openFile(existing);
+      return;
+    }
+
+    const template = app.vault.getAbstractFileByPath(DAILY_NOTE_TEMPLATE_PATH);
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (template instanceof TFile && templater?.create_new_note_from_template) {
+      try {
+        const created = await templater.create_new_note_from_template(
+          template,
+          DAILY_NOTE_FOLDER,
+          todayKey,
+          true
+        );
+        const file = created ?? app.vault.getAbstractFileByPath(journalPath);
+        if (file instanceof TFile) {
+          openFile(file);
+          return;
+        }
+      } catch (error) {
+        console.error("Smart Notes: erro ao criar nota diária com o Templater", error);
+      }
+    }
+
+    try {
+      const folder = app.vault.getAbstractFileByPath(DAILY_NOTE_FOLDER);
+      if (!folder) await app.vault.createFolder(DAILY_NOTE_FOLDER);
+      const timestamp = new Date().toISOString();
+      const content = `---\ncreated: ${timestamp}\nmodified: ${timestamp}\ntags:\n  - journal\ntype: daily\n---\n\n## 🙏 Hábitos\n\n## ✅ Inbox\n\n## 📒 Anotações\n`;
+      const created = await app.vault.create(journalPath, content);
+      openFile(created);
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar nota diária", error);
+      new Notice(`Não foi possível criar a nota diária: ${journalPath}`);
+    }
   };
 
   const createTaskFromTemplate = async () => {
@@ -270,6 +373,74 @@ export function HomeView({
     }
   };
 
+  const createPersonFromTemplate = async () => {
+    if (creatingPerson) return;
+
+    const template = app.vault.getAbstractFileByPath(PERSON_TEMPLATE_PATH);
+    if (!(template instanceof TFile)) {
+      new Notice(`Template não encontrado: ${PERSON_TEMPLATE_PATH}`);
+      return;
+    }
+
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (!templater?.create_new_note_from_template) {
+      new Notice("Ative o plugin Templater para criar uma nova pessoa.");
+      return;
+    }
+
+    setCreatingPerson(true);
+    try {
+      await templater.create_new_note_from_template(
+        template,
+        undefined,
+        undefined,
+        true
+      );
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar pessoa com Templater", error);
+      new Notice("Não foi possível criar a pessoa com o Templater.");
+    } finally {
+      setCreatingPerson(false);
+    }
+  };
+
+  const createInboxNoteFromTemplate = async () => {
+    if (creatingInboxNote) return;
+
+    const template = app.vault.getAbstractFileByPath(NOTE_TEMPLATE_PATH);
+    if (!(template instanceof TFile)) {
+      new Notice(`Template não encontrado: ${NOTE_TEMPLATE_PATH}`);
+      return;
+    }
+
+    const pluginRegistry = (app as App & { plugins?: CommunityPluginRegistry }).plugins;
+    const templaterPlugin =
+      pluginRegistry?.getPlugin?.("templater-obsidian") ??
+      pluginRegistry?.plugins?.["templater-obsidian"];
+    const templater = templaterPlugin?.templater;
+
+    if (!templater?.create_new_note_from_template) {
+      new Notice("Ative o plugin Templater para criar uma nova nota.");
+      return;
+    }
+
+    setCreatingInboxNote(true);
+    try {
+      // Sem pasta de destino: respeita a pasta padrão configurada no Templater.
+      await templater.create_new_note_from_template(template, undefined, undefined, true);
+    } catch (error) {
+      console.error("Smart Notes: erro ao criar nota com Templater", error);
+      new Notice("Não foi possível criar a nota com o Templater.");
+    } finally {
+      setCreatingInboxNote(false);
+    }
+  };
+
   const fileHref = (file: TFile | null | undefined): string => {
     if (!file) return "#";
     return `obsidian://open?vault=${encodeURIComponent(app.vault.getName())}&file=${encodeURIComponent(file.path)}`;
@@ -285,10 +456,68 @@ export function HomeView({
   return (
     <div className="smart-notes-home-view">
       <div className="smart-notes-home-header">
-        <h1 className="smart-notes-home-title">
+        <h1>
+          <button
+            type="button"
+            className="smart-notes-home-title"
+            onClick={() => void openTodayJournal()}
+            aria-label="Abrir ou criar a nota diária de hoje"
+            title="Abrir ou criar a nota diária de hoje"
+          >
           <TitleIcon icon="home" />
           <span>Smart Notes Home</span>
+          </button>
         </h1>
+      </div>
+
+      <div
+        className="smart-notes-habits-mobile-summary smart-notes-home-daily-progress"
+        role="link"
+        tabIndex={0}
+        aria-label="Abrir ou criar a nota diária de hoje"
+        onClick={() => void openTodayJournal()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void openTodayJournal();
+          }
+        }}
+      >
+        <div className="smart-notes-habits-mobile-summary-heading">
+          <span className="smart-notes-home-daily-progress-link">
+            <TitleIcon icon="activity" />
+            <span>Progresso de hoje</span>
+          </span>
+          <span className="smart-notes-habits-mobile-summary-count">
+            {todayHabitProgress
+              ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`
+              : "Sem registro de hoje"}
+          </span>
+        </div>
+        <div
+          className="smart-notes-habit-progress smart-notes-habits-mobile-today-progress"
+          role="progressbar"
+          aria-label="Hábitos concluídos hoje"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={todayHabitProgress?.percent ?? 0}
+          aria-valuetext={
+            todayHabitProgress
+              ? `${todayHabitProgress.done} de ${todayHabitProgress.total} hábitos concluídos`
+              : "Sem registro de hoje"
+          }
+        >
+          <span
+            className="smart-notes-habit-progress-fill"
+            style={{
+              width: `${todayHabitProgress?.percent ?? 0}%`,
+              backgroundColor: scoreColor(todayHabitProgress?.percent ?? 0),
+            }}
+          />
+          <span className="smart-notes-habit-progress-label">
+            {todayHabitProgress?.percent ?? 0}%
+          </span>
+        </div>
       </div>
 
       {saintOfDay ? (
@@ -336,6 +565,112 @@ export function HomeView({
           </div>
           <div className="smart-notes-stat-value">{data.books.length}</div>
         </div>
+        <div
+          className={`smart-notes-stat-card smart-notes-people-stat-card${pessoasLink?.file ? "" : " is-disabled"}`}
+          role="link"
+          tabIndex={pessoasLink?.file ? 0 : -1}
+          aria-label="Abrir Pessoas"
+          aria-disabled={!pessoasLink?.file}
+          onClick={() => pessoasLink?.file && openFile(pessoasLink.file)}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget || !pessoasLink?.file) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openFile(pessoasLink.file);
+            }
+          }}
+        >
+          <div className="smart-notes-stat-label">
+            <span className={`smart-notes-stat-link${pessoasLink?.file ? "" : " is-disabled"}`}>
+              <TitleIcon icon="users" />
+              <span>Pessoas</span>
+            </span>
+          </div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.people.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={(event) => {
+                event.stopPropagation();
+                void createPersonFromTemplate();
+              }}
+              disabled={creatingPerson}
+              aria-label="Criar nova pessoa com o template Pessoa"
+              title="Criar nova pessoa com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingPerson ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
+        </div>
+        <div className="smart-notes-stat-card smart-notes-confession-stat-card">
+          <div className="smart-notes-stat-label">
+            <a
+              className={`smart-notes-stat-link${confissoesLink?.file ? "" : " is-disabled"}`}
+              href={fileHref(confissoesLink?.file)}
+              onClick={(event) => {
+                if (!confissoesLink?.file) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                openFile(confissoesLink.file);
+              }}
+            >
+              <TitleIcon icon="church" />
+              <span>Desde a última confissão</span>
+            </a>
+          </div>
+          <div className="smart-notes-stat-value">
+            {daysSinceLastConfession ?? "—"}
+            {daysSinceLastConfession !== null ? (
+              <span className="smart-notes-stat-unit">
+                {daysSinceLastConfession === 1 ? " dia" : " dias"}
+              </span>
+            ) : null}
+          </div>
+          {!data.lastConfession ? (
+            <div className="smart-notes-confession-empty">Nenhuma data encontrada</div>
+          ) : null}
+        </div>
+        <div className="smart-notes-stat-card">
+          <div className="smart-notes-stat-label">
+            <a
+              className={`smart-notes-stat-link${inboxProcessingLink?.file ? "" : " is-disabled"}`}
+              href={fileHref(inboxProcessingLink?.file)}
+              onClick={(event) => {
+                if (!inboxProcessingLink?.file) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                openFile(inboxProcessingLink.file);
+              }}
+            >
+              <TitleIcon icon="inbox" />
+              <span>Inbox</span>
+            </a>
+          </div>
+          <div className="smart-notes-stat-main-row">
+            <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
+            <button
+              type="button"
+              className="smart-notes-stat-action"
+              onClick={() => void createInboxNoteFromTemplate()}
+              disabled={creatingInboxNote}
+              aria-label="Criar nova nota com o template Nota"
+              title="Criar nova nota com o Templater"
+            >
+              <TitleIcon icon="plus" />
+              <span>{creatingInboxNote ? "Criando…" : "Nova"}</span>
+            </button>
+          </div>
+        </div>
+        <div className="smart-notes-stat-card">
+          <div className="smart-notes-stat-label">Finalizadas hoje</div>
+          <div className="smart-notes-stat-value">{data.completedToday.length}</div>
+        </div>
         <div className="smart-notes-stat-card smart-notes-task-stat-card">
           <div className="smart-notes-stat-label">Tarefas abertas</div>
           <div className="smart-notes-stat-main-row">
@@ -353,15 +688,64 @@ export function HomeView({
             </button>
           </div>
         </div>
-        <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Finalizadas hoje</div>
-          <div className="smart-notes-stat-value">{data.completedToday.length}</div>
-        </div>
-        <div className="smart-notes-stat-card">
-          <div className="smart-notes-stat-label">Inbox</div>
-          <div className="smart-notes-stat-value">{data.inboxNotes.length}</div>
-        </div>
       </div>
+
+      <section
+        className={`smart-notes-mobile-priorities${completedPriorityCount > 0 ? " has-completed" : ""}${allPriorityTasksCompleted ? " all-completed" : ""}`}
+        aria-labelledby="smart-notes-mobile-priorities-title"
+      >
+        <div className="smart-notes-mobile-priorities-header">
+          <h2 id="smart-notes-mobile-priorities-title" className="smart-notes-title-with-icon">
+            <TitleIcon icon="target" />
+            <span>Tarefas principais de hoje</span>
+          </h2>
+          <span className="smart-notes-mobile-priorities-count">
+            {allPriorityTasksCompleted
+              ? "Dia concluído!"
+              : `${completedPriorityCount}/${todayPriorityTasks.length} concluídas`}
+          </span>
+        </div>
+        {allPriorityTasksCompleted ? (
+          <div className="smart-notes-priorities-reward" role="status">
+            <TitleIcon icon="trophy" />
+            <span>Missão cumprida — todas as tarefas do dia foram concluídas!</span>
+            <TitleIcon icon="sparkles" />
+          </div>
+        ) : null}
+        {todayPriorityTasks.length === 0 ? (
+          <p className="smart-notes-mobile-priorities-empty">
+            Nenhuma tarefa com Do date para hoje.
+          </p>
+        ) : (
+          <ol className="smart-notes-mobile-priorities-list">
+            {todayPriorityTasks.map((task) => {
+              const completedToday = completedTodayPaths.has(task.file.path);
+              const updating = updatingTaskPaths.has(task.file.path);
+              return (
+                <li key={task.file.path} className={completedToday ? "is-completed" : undefined}>
+                  <button
+                    type="button"
+                    className="smart-notes-mobile-priority-toggle"
+                    onClick={() => void toggleTaskDone(task)}
+                    disabled={updating}
+                    aria-label={`${task.done ? "Desmarcar" : "Marcar"} ${task.title} como concluída`}
+                    title={task.done ? "Desmarcar como concluída" : "Marcar como concluída"}
+                  >
+                    <TitleIcon icon={task.done ? "square-check-big" : "square"} />
+                  </button>
+                  <button
+                    type="button"
+                    className="smart-notes-mobile-priority-open"
+                    onClick={() => openFile(task.file)}
+                  >
+                    <span className="smart-notes-mobile-priority-title">{task.title}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
 
       <div className="smart-notes-panel smart-notes-panel-wide smart-notes-habits-panel">
         <div className="smart-notes-panel-header-inline">
@@ -386,40 +770,6 @@ export function HomeView({
           </select>
         </div>
         <p className="smart-notes-muted smart-notes-habits-caption">Exibindo: {habitsWindowLabel}</p>
-        <div className="smart-notes-habits-mobile-summary">
-          <div className="smart-notes-habits-mobile-summary-heading">
-            <span>Progresso de hoje</span>
-            <span className="smart-notes-habits-mobile-summary-count">
-              {todayHabitProgress
-                ? `${todayHabitProgress.done}/${todayHabitProgress.total} concluídos`
-                : "Sem registro de hoje"}
-            </span>
-          </div>
-          <div
-            className="smart-notes-habit-progress smart-notes-habits-mobile-today-progress"
-            role="progressbar"
-            aria-label="Hábitos concluídos hoje"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={todayHabitProgress?.percent ?? 0}
-            aria-valuetext={
-              todayHabitProgress
-                ? `${todayHabitProgress.done} de ${todayHabitProgress.total} hábitos concluídos`
-                : "Sem registro de hoje"
-            }
-          >
-            <span
-              className="smart-notes-habit-progress-fill"
-              style={{
-                width: `${todayHabitProgress?.percent ?? 0}%`,
-                backgroundColor: scoreColor(todayHabitProgress?.percent ?? 0),
-              }}
-            />
-            <span className="smart-notes-habit-progress-label">
-              {todayHabitProgress?.percent ?? 0}%
-            </span>
-          </div>
-        </div>
         {habits.days.length === 0 ? (
           <p className="smart-notes-muted">Nenhuma nota encontrada em journal/.</p>
         ) : (

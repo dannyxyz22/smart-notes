@@ -15,13 +15,21 @@ export interface DashboardLink {
   file: TFile | null;
 }
 
+export interface DashboardConfession {
+  file: TFile;
+  date: Date;
+}
+
 export interface DashboardData {
   books: BookRecord[];
+  people: TFile[];
   inboxNotes: TFile[];
   recentNotes: TFile[];
   openTasks: DashboardTask[];
   completedToday: DashboardTask[];
+  todayTasks: DashboardTask[];
   upcomingTasks: DashboardTask[];
+  lastConfession: DashboardConfession | null;
   links: DashboardLink[];
 }
 
@@ -49,6 +57,7 @@ const HOME_LINKS = [
     path: "processed/Wishlist - Lista de livros católicos",
   },
   { label: "Biblioteca", path: "processed/Biblioteca.base" },
+  { label: "Confissões", path: "processed/Confissões.md" },
 ];
 
 function isSameDay(left: Date, right: Date): boolean {
@@ -134,14 +143,22 @@ function isInboxPath(path: string): boolean {
   return path.toLowerCase().startsWith("inbox/");
 }
 
+function hasType(value: unknown, expected: string): boolean {
+  if (typeof value === "string") return value === expected;
+  return Array.isArray(value) && value.includes(expected);
+}
+
 function computeDashboard(app: App): DashboardData {
   const now = new Date();
   const markdownFiles = app.vault
     .getMarkdownFiles()
     .filter((file) => !isTemplatePath(file.path));
   const books: BookRecord[] = [];
+  const people: TFile[] = [];
   const tasks: DashboardTask[] = [];
   const inboxNotes: TFile[] = [];
+  let lastConfession: DashboardConfession | null = null;
+  const todayStart = startOfDay(now).getTime();
 
   for (const file of markdownFiles) {
     const cache = app.metadataCache.getFileCache(file);
@@ -150,8 +167,23 @@ function computeDashboard(app: App): DashboardData {
     const maybeBook = toBookRecord(file, fm);
     if (maybeBook) books.push(maybeBook);
 
+    if (hasType(fm.type, "person")) people.push(file);
+
     const maybeTask = toTask(app, file);
     if (maybeTask) tasks.push(maybeTask);
+
+    if (fm.type === "confession") {
+      const confessionDate = toDate(fm["Data da confissão"]);
+      if (confessionDate) {
+        const confessionStart = startOfDay(confessionDate);
+        if (
+          confessionStart.getTime() <= todayStart &&
+          (!lastConfession || confessionStart.getTime() > lastConfession.date.getTime())
+        ) {
+          lastConfession = { file, date: confessionStart };
+        }
+      }
+    }
 
     if (isInboxPath(file.path)) inboxNotes.push(file);
   }
@@ -169,6 +201,13 @@ function computeDashboard(app: App): DashboardData {
     return false;
   });
 
+  const todayTasks = [...tasks]
+    .filter((task) => task.dueDate && isSameDay(task.dueDate, now))
+    .sort((left, right) => {
+      const dateOrder = (left.dueDate?.getTime() ?? 0) - (right.dueDate?.getTime() ?? 0);
+      return dateOrder || left.title.localeCompare(right.title);
+    });
+
   const upcomingTasks = [...openTasks]
     .filter((task) => task.dueDate)
     .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0));
@@ -183,15 +222,19 @@ function computeDashboard(app: App): DashboardData {
   });
 
   books.sort((a, b) => a.title.localeCompare(b.title));
+  people.sort((a, b) => a.basename.localeCompare(b.basename));
   inboxNotes.sort((a, b) => b.stat.mtime - a.stat.mtime);
 
   return {
     books,
+    people,
     inboxNotes,
     recentNotes,
     openTasks,
     completedToday,
+    todayTasks,
     upcomingTasks,
+    lastConfession,
     links,
   };
 }
