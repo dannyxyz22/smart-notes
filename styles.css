@@ -1200,6 +1200,23 @@
   flex-shrink: 0;
 }
 
+.smart-notes-habit-note-button {
+  all: unset;
+  display: inline-flex;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.smart-notes-habit-note-button:hover .smart-notes-habit-icon-badge {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+.smart-notes-habit-note-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 .smart-notes-habit-icon {
   display: inline-flex;
   align-items: center;

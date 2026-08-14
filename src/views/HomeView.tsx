@@ -265,6 +265,24 @@ export function HomeView({
     leaf.openFile(file);
   };
 
+  const openMorningPrayerNote = () => {
+    const configuredPath = _settings.morningPrayerNotePath;
+    if (!configuredPath) {
+      new Notice(
+        "Selecione a nota de Oração Matinal em Configurações → Smart Notes."
+      );
+      return;
+    }
+
+    const file = app.vault.getAbstractFileByPath(configuredPath);
+    if (!(file instanceof TFile)) {
+      new Notice(`Nota de Oração Matinal não encontrada: ${configuredPath}`);
+      return;
+    }
+
+    openFile(file);
+  };
+
   const toggleTaskDone = async (task: DashboardTask) => {
     if (updatingTaskPaths.has(task.file.path)) return;
 
@@ -782,9 +800,23 @@ export function HomeView({
                   <th>%</th>
                   {habits.rows.map((row) => (
                     <th key={row.habit.key} className="smart-notes-habit-head" title={row.habit.label}>
-                      <span className="smart-notes-habit-icon-badge">
-                        <HabitIcon icon={row.habit.icon} label={row.habit.label} />
-                      </span>
+                      {row.habit.key === "oracao_matinal" ? (
+                        <button
+                          type="button"
+                          className="smart-notes-habit-note-button"
+                          onClick={openMorningPrayerNote}
+                          aria-label="Abrir nota de Oração Matinal"
+                          title="Abrir nota de Oração Matinal"
+                        >
+                          <span className="smart-notes-habit-icon-badge">
+                            <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="smart-notes-habit-icon-badge">
+                          <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                        </span>
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -911,9 +943,23 @@ export function HomeView({
                   {habits.rows.map((row) => (
                     <tr key={row.habit.key}>
                       <td className="smart-notes-habit-mobile-icon-cell" title={row.habit.label}>
-                        <span className="smart-notes-habit-icon-badge">
-                          <HabitIcon icon={row.habit.icon} label={row.habit.label} />
-                        </span>
+                        {row.habit.key === "oracao_matinal" ? (
+                          <button
+                            type="button"
+                            className="smart-notes-habit-note-button"
+                            onClick={openMorningPrayerNote}
+                            aria-label="Abrir nota de Oração Matinal"
+                            title="Abrir nota de Oração Matinal"
+                          >
+                            <span className="smart-notes-habit-icon-badge">
+                              <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                            </span>
+                          </button>
+                        ) : (
+                          <span className="smart-notes-habit-icon-badge">
+                            <HabitIcon icon={row.habit.icon} label={row.habit.label} />
+                          </span>
+                        )}
                       </td>
                       {habits.days.map((day, dayIndex) => {
                         const isToday = day.file.basename === todayKey;

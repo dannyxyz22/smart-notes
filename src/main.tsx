@@ -1,4 +1,12 @@
-import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from "obsidian";
+import {
+  AbstractInputSuggest,
+  App,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+  WorkspaceLeaf,
+} from "obsidian";
 import { BooksItemView, VIEW_TYPE_BOOKS } from "./views/BooksItemView";
 import { HomeItemView, VIEW_TYPE_HOME } from "./views/HomeItemView";
 import { AgendaItemView, VIEW_TYPE_AGENDA } from "./views/AgendaItemView";
@@ -165,11 +173,16 @@ export default class SmartNotesBooksPlugin extends Plugin {
     const agendaDaysAhead = this.normalizeDays(data?.agendaDaysAhead);
     const icsCalendars = this.normalizeCalendars(data?.icsCalendars);
     const habitsWindowPreset = this.normalizeHabitsWindowPreset(data?.habitsWindowPreset);
+    const morningPrayerNotePath =
+      typeof data?.morningPrayerNotePath === "string"
+        ? data.morningPrayerNotePath
+        : DEFAULT_SETTINGS.morningPrayerNotePath;
 
     this.settings = {
       agendaDaysAhead,
       icsCalendars,
       habitsWindowPreset,
+      morningPrayerNotePath,
     };
   }
 
@@ -231,6 +244,42 @@ export default class SmartNotesBooksPlugin extends Plugin {
   }
 }
 
+class MarkdownNoteSuggest extends AbstractInputSuggest<TFile> {
+  private readonly onChoose: (file: TFile) => void;
+
+  constructor(
+    app: App,
+    inputEl: HTMLInputElement,
+    onChoose: (file: TFile) => void
+  ) {
+    super(app, inputEl);
+    this.onChoose = onChoose;
+    this.limit = 50;
+  }
+
+  protected getSuggestions(query: string): TFile[] {
+    const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+    return this.app.vault
+      .getMarkdownFiles()
+      .filter(
+        (file) =>
+          !normalizedQuery ||
+          file.path.toLocaleLowerCase("pt-BR").includes(normalizedQuery)
+      )
+      .sort((left, right) => left.path.localeCompare(right.path, "pt-BR"));
+  }
+
+  renderSuggestion(file: TFile, el: HTMLElement): void {
+    el.setText(file.path);
+  }
+
+  selectSuggestion(file: TFile): void {
+    this.setValue(file.path);
+    this.onChoose(file);
+    this.close();
+  }
+}
+
 class SmartNotesSettingTab extends PluginSettingTab {
   private readonly plugin: SmartNotesBooksPlugin;
 
@@ -262,6 +311,25 @@ class SmartNotesSettingTab extends PluginSettingTab {
           this.plugin.settings.habitsWindowPreset =
             this.plugin.normalizeHabitsWindowPreset(value);
           await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Nota de Oração Matinal")
+      .setDesc(
+        "Digite para buscar a nota aberta ao clicar no ícone de Oração Matinal."
+      )
+      .addSearch((search) => {
+        search.setPlaceholder("Digite o nome ou caminho da nota");
+        search.setValue(this.plugin.settings.morningPrayerNotePath);
+        search.onChange(async (value) => {
+          this.plugin.settings.morningPrayerNotePath = value;
+          await this.plugin.saveSettings();
+        });
+
+        new MarkdownNoteSuggest(this.app, search.inputEl, (file) => {
+          this.plugin.settings.morningPrayerNotePath = file.path;
+          void this.plugin.saveSettings();
         });
       });
 
@@ -374,6 +442,7 @@ class SmartNotesSettingTab extends PluginSettingTab {
             agendaDaysAhead: DEFAULT_SETTINGS.agendaDaysAhead,
             icsCalendars: DEFAULT_ICS_CALENDARS.map((entry) => ({ ...entry })),
             habitsWindowPreset: DEFAULT_SETTINGS.habitsWindowPreset,
+            morningPrayerNotePath: DEFAULT_SETTINGS.morningPrayerNotePath,
           };
           await this.plugin.saveSettings();
           this.display();
