@@ -17,6 +17,10 @@ export class HomeItemView extends ItemView {
     onHabitsWindowPresetChange: (preset: HabitsWindowPreset) => Promise<void>
   ) {
     super(leaf);
+    // A Home ocupa uma aba do editor e deve poder ser substituida por uma nota.
+    // Sem isso, buscas no mobile podem abrir o arquivo em outra leaf enquanto
+    // o dashboard continua visivel.
+    this.navigation = true;
     this.getSettings = getSettings;
     this.onHabitsWindowPresetChange = onHabitsWindowPresetChange;
   }
