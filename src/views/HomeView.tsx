@@ -1049,7 +1049,7 @@ export function HomeView({
               {data.completedToday.slice(0, 8).map((task) => (
                 <li key={task.file.path}>
                   <button onClick={() => openFile(task.file)}>{task.title}</button>
-                  <span>{formatDateTime(task.file.stat.mtime)}</span>
+                  <span>{task.dueDate ? formatDate(task.dueDate) : ""}</span>
                 </li>
               ))}
             </ul>

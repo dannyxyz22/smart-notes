@@ -43,7 +43,6 @@ interface FrontmatterShape {
   cover?: unknown;
   Done?: unknown;
   done?: unknown;
-  modified?: unknown;
   [key: string]: unknown;
 }
 
@@ -189,17 +188,9 @@ function computeDashboard(app: App): DashboardData {
   }
 
   const openTasks = tasks.filter((task) => !task.done);
-  const completedToday = tasks.filter((task) => {
-    if (!task.done) return false;
-    const cache = app.metadataCache.getFileCache(task.file);
-    const fm = (cache?.frontmatter ?? {}) as FrontmatterShape;
-    const fromFrontmatter = toDate(fm.modified);
-    const fileModifiedAt = new Date(task.file.stat.mtime);
-
-    if (isSameDay(fileModifiedAt, now)) return true;
-    if (fromFrontmatter && isSameDay(fromFrontmatter, now)) return true;
-    return false;
-  });
+  const completedToday = tasks.filter(
+    (task) => task.done && task.dueDate && isSameDay(task.dueDate, now)
+  );
 
   const todayTasks = [...tasks]
     .filter((task) => task.dueDate && isSameDay(task.dueDate, now))

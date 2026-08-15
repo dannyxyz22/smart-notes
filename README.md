@@ -59,7 +59,7 @@ Seções exibidas:
 - **Métricas rápidas** — contagem de livros, tarefas abertas, tarefas finalizadas hoje, notas na inbox e dias desde a última confissão.
 - Arquivos dentro da pasta `templates/` são ignorados em todo o dashboard.
 - **Próximos compromissos** — tarefas com `Do date` no futuro, lidas do vault.
-- **Finalizadas hoje** — tarefas com `Done: true` modificadas hoje.
+- **Finalizadas hoje** — tarefas com `Done: true` e `Do date` igual à data de hoje.
 - **Inbox e triagem rápida** — notas da pasta `inbox/`, ordenadas por data de modificação.
 - **Pessoas e hábitos** — atalhos para `processed/Pessoas.base`, `processed/Journal.base` e `processed/CalendarView`.
 - **Livros** — atalhos para `processed/Wishlist...` e `processed/Biblioteca.base`.
