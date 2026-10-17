@@ -1,6 +1,7 @@
 import {
   AbstractInputSuggest,
   App,
+  Notice,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -16,16 +17,22 @@ import {
 } from "./views/TypeFoldersItemView";
 import {
   DEFAULT_ICS_CALENDARS,
+  DEFAULT_GOOGLE_CALENDAR_WEBHOOK_URL,
   DEFAULT_SETTINGS,
   HabitsWindowPreset,
   SmartNotesSettings,
 } from "./settings";
+import { ReminderManager } from "./reminder/ReminderManager";
 
 export default class SmartNotesBooksPlugin extends Plugin {
   settings: SmartNotesSettings = DEFAULT_SETTINGS;
+  reminderManager: ReminderManager | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
+
+    this.reminderManager = new ReminderManager(this.app, () => this.settings);
+    this.reminderManager.registerAutoDetect();
 
     this.registerView(
       VIEW_TYPE_HOME,
@@ -83,6 +90,20 @@ export default class SmartNotesBooksPlugin extends Plugin {
       callback: () => this.activateTypeFoldersView(),
     });
 
+    this.addCommand({
+      id: "smart-notes-create-reminder",
+      name: "Criar lembrete da nota atual",
+      callback: async () => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file) {
+          new Notice("Nenhuma nota aberta.");
+          return;
+        }
+        if (!this.reminderManager) return;
+        await this.reminderManager.openManualModal(file);
+      },
+    });
+
     this.addSettingTab(new SmartNotesSettingTab(this.app, this));
 
     // Aguarda o workspace estar pronto para abrir a Home sem erro de tab group.
@@ -92,8 +113,7 @@ export default class SmartNotesBooksPlugin extends Plugin {
   }
 
   onunload(): void {
-    // O Obsidian já chama onClose() de cada view aberta; nada de
-    // estado global do plugin para limpar aqui por enquanto.
+    this.reminderManager?.onunload();
   }
 
   private async activateHomeView(): Promise<void> {
@@ -177,12 +197,27 @@ export default class SmartNotesBooksPlugin extends Plugin {
       typeof data?.morningPrayerNotePath === "string"
         ? data.morningPrayerNotePath
         : DEFAULT_SETTINGS.morningPrayerNotePath;
+    const googleCalendarWebhookUrl =
+      typeof data?.googleCalendarWebhookUrl === "string"
+        ? data.googleCalendarWebhookUrl
+        : DEFAULT_SETTINGS.googleCalendarWebhookUrl;
+    const googleCalendarApiKey =
+      typeof data?.googleCalendarApiKey === "string"
+        ? data.googleCalendarApiKey
+        : DEFAULT_SETTINGS.googleCalendarApiKey;
+    const googleCalendarCalendarId =
+      typeof data?.googleCalendarCalendarId === "string"
+        ? data.googleCalendarCalendarId
+        : DEFAULT_SETTINGS.googleCalendarCalendarId;
 
     this.settings = {
       agendaDaysAhead,
       icsCalendars,
       habitsWindowPreset,
       morningPrayerNotePath,
+      googleCalendarWebhookUrl,
+      googleCalendarApiKey,
+      googleCalendarCalendarId,
     };
   }
 
@@ -431,9 +466,53 @@ class SmartNotesSettingTab extends PluginSettingTab {
         });
       });
 
+    containerEl.createEl("h3", { text: "Google Calendar (Apps Script)" });
+    containerEl.createEl("p", {
+      text: "Configure a URL do Web App do Google Apps Script e a API Key para criar lembretes no Google Calendar.",
+    });
+
+    new Setting(containerEl)
+      .setName("URL do Webhook")
+      .setDesc("URL do Google Apps Script (doPost).")
+      .addText((text) => {
+        text.setPlaceholder(
+          "https://script.google.com/macros/s/.../exec"
+        );
+        text.setValue(this.plugin.settings.googleCalendarWebhookUrl);
+        text.onChange(async (value) => {
+          this.plugin.settings.googleCalendarWebhookUrl = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("API Key")
+      .setDesc("Chave de autenticação do Apps Script.")
+      .addText((text) => {
+        text.inputEl.type = "password";
+        text.setPlaceholder("••••••••");
+        text.setValue(this.plugin.settings.googleCalendarApiKey);
+        text.onChange(async (value) => {
+          this.plugin.settings.googleCalendarApiKey = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("ID do Calendário")
+      .setDesc("ID do calendário de destino (ex: primary).")
+      .addText((text) => {
+        text.setPlaceholder("primary");
+        text.setValue(this.plugin.settings.googleCalendarCalendarId);
+        text.onChange(async (value) => {
+          this.plugin.settings.googleCalendarCalendarId = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
     new Setting(containerEl)
       .setName("Restaurar padrao")
-      .setDesc("Restaura os calendarios iniciais e 21 dias de janela.")
+      .setDesc("Restaura os calendarios iniciais, 21 dias de janela e configurações do Google Calendar.")
       .addButton((button) => {
         button.setWarning();
         button.setButtonText("Restaurar");
@@ -443,6 +522,11 @@ class SmartNotesSettingTab extends PluginSettingTab {
             icsCalendars: DEFAULT_ICS_CALENDARS.map((entry) => ({ ...entry })),
             habitsWindowPreset: DEFAULT_SETTINGS.habitsWindowPreset,
             morningPrayerNotePath: DEFAULT_SETTINGS.morningPrayerNotePath,
+            googleCalendarWebhookUrl:
+              DEFAULT_SETTINGS.googleCalendarWebhookUrl,
+            googleCalendarApiKey: DEFAULT_SETTINGS.googleCalendarApiKey,
+            googleCalendarCalendarId:
+              DEFAULT_SETTINGS.googleCalendarCalendarId,
           };
           await this.plugin.saveSettings();
           this.display();
