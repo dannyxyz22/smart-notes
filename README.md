@@ -1,10 +1,11 @@
 # Smart Notes
 
-Plugin de Obsidian com três funcionalidades integradas:
+Plugin de Obsidian com quatro funcionalidades integradas:
 
 1. **Home Dashboard** — painel central com métricas do vault, tarefas, inbox e atalhos para notas importantes.
 2. **Agenda ICS** — painel lateral com os próximos compromissos lidos diretamente de feeds `.ics` do Google Calendar (sem iframe, sem dependência de sessão).
 3. **Galeria de Livros** — view em grid de todas as notas com `type: book` no frontmatter.
+4. **Reminder `@remind`** — escreva `@remind` em qualquer nota para abrir um modal e criar um evento no Google Calendar via Google Apps Script.
 
 O Markdown continua sendo a única fonte de verdade. O plugin nunca escreve nos arquivos.
 
@@ -27,7 +28,11 @@ smart-notes/
     │   ├── useBooks.ts       # Hook: lê notas type:book via metadataCache
     │   ├── useDashboard.ts   # Hook: agrega tarefas, inbox e notas recentes
     │   └── useIcsAgenda.ts   # Hook: busca e parseia feeds ICS
-    └── views/
+    ├── reminder/
+│   │   ├── ReminderManager.ts    # Detecção de @remind + criação de evento
+│   │   ├── ReminderModal.tsx     # Modal de data/hora (React)
+│   │   └── googleCalendarAppsScript.ts  # Cliente POST para Apps Script
+│   └── views/
         ├── HomeItemView.tsx  # ItemView bridge → HomeView
         ├── HomeView.tsx      # Dashboard principal (tab do editor)
         ├── AgendaItemView.tsx # ItemView bridge → AgendaView (sidebar)
@@ -208,6 +213,72 @@ Os aliases em português `autor` e `capa` também são reconhecidos.
 - Ordenação por título, autor, avaliação ou progresso.
 - Barra de progresso e estrelas de avaliação no card.
 - Clicar no card abre a nota no editor.
+
+---
+
+## Reminder `@remind`
+
+Escreva `@remind` em qualquer lugar de uma nota Markdown aberta e o plugin abrirá um modal para definir data e hora do lembrete. O evento é criado no Google Calendar via Google Apps Script.
+
+### Como usar
+
+1. Abra uma nota Markdown no editor.
+2. Digite `@remind` (opcionalmente seguido do título, ex: `@remind Reunião com cliente`).
+3. O modal se abre automaticamente com título pré-preenchido e data/hora sugerida (agora + 1 hora).
+4. Ajuste data/hora se necessário e clique em **Criar lembrete**.
+5. O evento é criado no Google Calendar e a descrição inclui um link `obsidian://` de volta para a nota.
+
+### Registro no Markdown
+
+Após criar o lembrete com sucesso, o plugin insere automaticamente um registro na nota, logo abaixo da linha onde está o `@remind`:
+
+```markdown
+Minha reunião importante @remind Reunião com cliente
+
+> 📅 Lembrete criado: Reunião com cliente em 20/10/2026 14:00 — Google Calendar (calendário: primary, evento: abc123)
+```
+
+Esse registro serve duas finalidades:
+
+- **Lembrete visual**: você vê direto na nota que aquele `@remind` já foi processado.
+- **Detecção automática persistente**: ao reabrir o Obsidian, o plugin verifica se já existe um registro `📅 Lembrete criado` nas linhas abaixo do `@remind`. Se existir, **não reabre o modal** novamente.
+
+Também é possível criar um lembrete manualmente via Command Palette: **"Criar lembrete da nota atual"**.
+
+### Configurar o Google Calendar
+
+No Google Cloud Console (ou no seu Apps Script já implantado), você precisa:
+
+1. Ter um Google Apps Script publicado como **Web App** com o endpoint `doPost`.
+2. O script aceita `POST` com JSON contendo:
+   - `key`: sua API Key
+   - `action: "create_event"`
+   - `title`: título do evento
+   - `startTime`: ISO datetime (ex: `2026-10-20T14:00:00`)
+   - `endTime`: ISO datetime
+   - `calendarId`: opcional (padrão: `primary`)
+   - `description`: opcional
+
+3. No Obsidian, vá em **Configurações → Smart Notes → Google Calendar (Apps Script)** e preencha:
+   - **URL do Webhook**: URL do seu Apps Script Web App (`.../exec`)
+   - **API Key**: a chave configurada no Apps Script
+   - **ID do Calendário**: `primary` ou outro ID de calendário
+
+> ⚠️ A API Key é salva no `data.json` do plugin dentro do vault (não no código-fonte). Não compartilhe esse arquivo publicamente.
+
+---
+
+## Comandos
+
+| Ação | Como acessar |
+|---|---|
+| Abrir Home dashboard | Ícone 🏠 no ribbon · Command Palette |
+| Abrir painel de Agenda | Command Palette → "Abrir painel de Agenda" |
+| Abrir view de Livros | Command Palette → "Abrir view de Livros" |
+| Abrir painel Notas por tipo | Command Palette → "Abrir painel Notas por tipo" |
+| Criar lembrete da nota atual | Command Palette → "Criar lembrete da nota atual" |
+
+O **Home dashboard** abre como aba no editor principal. A **Agenda** abre como painel na sidebar direita.
 
 ---
 

@@ -3,12 +3,15 @@ import { ReminderModal } from "./ReminderModal";
 import { createGoogleCalendarEvent } from "./googleCalendarAppsScript";
 import { SmartNotesSettings } from "../settings";
 
+const POLL_INTERVAL_MS = 1000;
+const LOOK_AHEAD_LINES = 5;
+
 export class ReminderManager {
   private app: App;
   private getSettings: () => SmartNotesSettings;
   private treatedPositions: Set<string> = new Set();
   private isModalOpen = false;
-  private editorHandlers: Map<Editor, () => void> = new Map();
+  private pollInterval: number | null = null;
 
   constructor(app: App, getSettings: () => SmartNotesSettings) {
     this.app = app;
@@ -16,74 +19,84 @@ export class ReminderManager {
   }
 
   registerAutoDetect(): void {
-    this.attachToExistingEditors();
-    // Re-anexa quando abrir novas abas / splits
-    this.app.workspace.on("layout-change", () => this.attachToExistingEditors());
+    this.pollInterval = window.setInterval(() => {
+      this.checkAllEditors();
+    }, POLL_INTERVAL_MS);
   }
 
   onunload(): void {
-    for (const [editor, remove] of this.editorHandlers) {
-      try {
-        remove();
-      } catch {
-        // ignora
-      }
+    if (this.pollInterval !== null) {
+      window.clearInterval(this.pollInterval);
+      this.pollInterval = null;
     }
-    this.editorHandlers.clear();
   }
 
-  private attachToExistingEditors(): void {
+  private checkAllEditors(): void {
+    if (this.isModalOpen) return;
+
     const leaves = this.app.workspace.getLeavesOfType("markdown");
     for (const leaf of leaves) {
       const view = leaf.view as MarkdownView;
-      this.attachToEditor(view.editor, view.file);
+      const editor = view.editor;
+      const file = view.file;
+      if (!file) continue;
+
+      const doc = editor.getDoc();
+      const lineCount = doc.lineCount();
+
+      for (let line = 0; line < lineCount; line += 1) {
+        const lineText = doc.getLine(line);
+        if (!lineText.includes("@remind")) continue;
+
+        // Já foi tratado nesta sessão?
+        const posKey = `${file.path}:${line}`;
+        if (this.treatedPositions.has(posKey)) continue;
+
+        // Já existe registro de lembrete nas próximas linhas?
+        if (this.hasReminderRecordNearby(editor, line)) {
+          this.treatedPositions.add(posKey);
+          continue;
+        }
+
+        const idx = lineText.indexOf("@remind");
+        this.treatedPositions.add(`${file.path}:${line}:${idx}`);
+        this.isModalOpen = true;
+        this.openModal(file, lineText, editor, line);
+        return; // abre um modal por vez
+      }
     }
   }
 
-  private attachToEditor(editor: Editor, file: TFile | null): void {
-    if (!file) return;
-    if (this.editorHandlers.has(editor)) return;
-
-    const handler = (change: unknown, source: string) => {
-      this.handleEditorChange(editor, file, change as any);
-    };
-
-    // editor.on existe em runtime (wrapper do CodeMirror no Obsidian)
-    (editor as any).on("change", handler);
-    this.editorHandlers.set(editor, () => {
-      (editor as any).off("change", handler);
-    });
+  /**
+   * Verifica se nas próximas LOOK_AHEAD_LINES linhas existe um registro de
+   * lembrete já criado (ex: "> 📅 Lembrete criado...").
+   */
+  private hasReminderRecordNearby(editor: Editor, startLine: number): boolean {
+    const lineCount = editor.lineCount();
+    const endLine = Math.min(startLine + LOOK_AHEAD_LINES + 1, lineCount);
+    for (let l = startLine; l < endLine; l += 1) {
+      const text = editor.getLine(l);
+      if (
+        text.includes("📅 Lembrete criado") ||
+        text.includes("Lembrete criado no Google Calendar")
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  private handleEditorChange(editor: Editor, file: TFile, change: any): void {
-    if (this.isModalOpen) return;
-
-    const insertedText = Array.isArray(change?.text)
-      ? change.text.join("\n")
-      : change?.text ?? change?.insert ?? "";
-
-    if (!insertedText.includes("@remind")) return;
-
-    const doc = editor.getDoc();
-    const line = change?.from?.line ?? 0;
-    const lineText = doc.getLine(line);
-    const idx = lineText.indexOf("@remind");
-    if (idx < 0) return;
-
-    const posKey = `${file.path}:${line}:${idx}`;
-    if (this.treatedPositions.has(posKey)) return;
-
-    this.treatedPositions.add(posKey);
-    this.isModalOpen = true;
-    this.openModal(file, lineText);
-  }
-
-  private openModal(file: TFile, context: string): void {
+  private openModal(
+    file: TFile,
+    context: string,
+    editor: Editor,
+    remindLine: number
+  ): void {
     const modal = new ReminderModal(this.app, {
       initialTitle: this.extractTitle(context, file),
       file,
       onCreate: async (title: string, startTime: string, endTime: string) => {
-        await this.createReminder(title, startTime, endTime, file);
+        await this.createReminder(title, startTime, endTime, file, editor, remindLine);
       },
       onClose: () => {
         this.isModalOpen = false;
@@ -100,11 +113,16 @@ export class ReminderManager {
     return file.basename;
   }
 
+  /**
+   * Cria o evento no Google Calendar via Apps Script e registra no Markdown.
+   */
   async createReminder(
     title: string,
     startTime: string,
     endTime: string,
-    file: TFile
+    file: TFile,
+    editor: Editor,
+    remindLine: number
   ): Promise<void> {
     const settings = this.getSettings();
 
@@ -139,6 +157,24 @@ export class ReminderManager {
       );
 
       if (response.status === "ok") {
+        const eventId = (response.data as Record<string, unknown> | undefined)?.eventId;
+        const calendarId = (response.data as Record<string, unknown> | undefined)?.calendarId;
+
+        const startDate = new Date(startTime).toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const recordLine = `> 📅 Lembrete criado: ${title} em ${startDate} — Google Calendar (calendário: ${calendarId ?? "primary"}${eventId ? `, evento: ${eventId}` : ""})`;
+
+        // Insere o registro logo após a linha do @remind.
+        const doc = editor.getDoc();
+        const insertAt = { line: remindLine + 1, ch: 0 };
+        doc.replaceRange(`\n${recordLine}`, insertAt);
+
         new Notice("Lembrete criado no Google Calendar!");
       } else {
         new Notice(`Erro: ${response.error || "Erro desconhecido"}`);
@@ -154,11 +190,17 @@ export class ReminderManager {
 
   async openManualModal(file: TFile): Promise<void> {
     this.isModalOpen = true;
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const editor = activeView?.editor;
+    if (!editor) {
+      new Notice("Não foi possível acessar o editor da nota.");
+      return;
+    }
     const modal = new ReminderModal(this.app, {
       initialTitle: file.basename,
       file,
       onCreate: async (title: string, startTime: string, endTime: string) => {
-        await this.createReminder(title, startTime, endTime, file);
+        await this.createReminder(title, startTime, endTime, file, editor, 0);
       },
       onClose: () => {
         this.isModalOpen = false;
