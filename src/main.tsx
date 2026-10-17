@@ -31,7 +31,7 @@ export default class SmartNotesBooksPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
 
-    this.reminderManager = new ReminderManager(this.app, () => this.settings);
+    this.reminderManager = new ReminderManager(this, () => this.settings);
     this.reminderManager.registerAutoDetect();
 
     this.registerView(

@@ -218,53 +218,82 @@ Os aliases em português `autor` e `capa` também são reconhecidos.
 
 ## Reminder `@remind`
 
-Escreva `@remind` em qualquer lugar de uma nota Markdown aberta e o plugin abrirá um modal para definir data e hora do lembrete. O evento é criado no Google Calendar via Google Apps Script.
+Escreva `@remind` em qualquer lugar de uma nota Markdown aberta (ou use a Command Palette) e o plugin abrirá uma janela modal para definir data e hora do compromisso. O evento é criado no Google Calendar via Google Apps Script com notificação (popup reminder) de 5 minutos antes e link direto de volta para a nota no Obsidian.
 
 ### Como usar
 
 1. Abra uma nota Markdown no editor.
 2. Digite `@remind` (opcionalmente seguido do título, ex: `@remind Reunião com cliente`).
-3. O modal se abre automaticamente com título pré-preenchido e data/hora sugerida (agora + 1 hora).
-4. Ajuste data/hora se necessário e clique em **Criar lembrete**.
-5. O evento é criado no Google Calendar e a descrição inclui um link `obsidian://` de volta para a nota.
+3. O modal se abre automaticamente com o título pré-preenchido e data/hora sugerida (horário local atual + 1 hora).
+4. Ajuste data/hora se necessário e clique em **Criar lembrete** (ou pressione `Enter`).
+5. O evento é criado no Google Calendar com:
+   - **Alerta de 5 minutos antes** (popup reminder) configurado automaticamente.
+   - **Link clicável** na descrição do evento (`obsidian://open?vault=...&file=...`) para abrir a nota no Obsidian com um clique.
+
+> **Cancelamento:** Se fechar o modal ou clicar em **Cancelar**, a tag `@remind` recém-digitada é removida automaticamente da nota, sem poluir o seu texto.
+
+---
 
 ### Registro no Markdown
 
-Após criar o lembrete com sucesso, o plugin insere automaticamente um registro na nota, logo abaixo da linha onde está o `@remind`:
+Após criar o lembrete com sucesso, o plugin insere automaticamente uma linha limpa de registro na nota, logo abaixo do `@remind` (ou abaixo do cursor):
 
 ```markdown
 Minha reunião importante @remind Reunião com cliente
 
-> 📅 Lembrete criado: Reunião com cliente em 20/10/2026 14:00 — Google Calendar (calendário: primary, evento: abc123)
+> 📅 Lembrete criado para 20/10/2026, 14:00
 ```
 
-Esse registro serve duas finalidades:
+Esse registro serve para:
+- **Lembrete visual limpo**: você identifica na nota a data e hora do compromisso agendado.
+- **Detecção e persistência**: ao reabrir o Obsidian, o plugin reconhece o registro `📅 Lembrete criado` nas linhas seguintes e **não reabre o modal** novamente.
 
-- **Lembrete visual**: você vê direto na nota que aquele `@remind` já foi processado.
-- **Detecção automática persistente**: ao reabrir o Obsidian, o plugin verifica se já existe um registro `📅 Lembrete criado` nas linhas abaixo do `@remind`. Se existir, **não reabre o modal** novamente.
+#### Edição, movimentação e exclusão do `@remind`
+- **Pode apagar o `@remind`?** Sim, com total segurança. O compromisso já foi criado no Google Calendar. Se você quiser limpar o texto e deixar apenas a nota com a linha `> 📅 Lembrete criado para...`, o plugin não fará nada e o evento continuará salvo na sua agenda.
+- **Mover o `@remind` de lugar:** O plugin procura o registro `📅 Lembrete criado` nas **5 linhas imediatamente abaixo** da tag. Se você mover o `@remind`, mova a linha de registro junto. Se você mover apenas a palavra `@remind` para longe (mais de 5 linhas de distância do registro), o plugin entenderá que se trata de um **novo compromisso não agendado** e abrirá o modal para agendá-lo.
+- **Apagar a linha `> 📅 Lembrete criado`:** Se você apagar a linha de registro mas mantiver a palavra `@remind`, o plugin entenderá que a nota ainda precisa de agendamento e abrirá o modal novamente.
 
-Também é possível criar um lembrete manualmente via Command Palette: **"Criar lembrete da nota atual"**.
+#### Proteção do Frontmatter YAML
+O plugin possui proteção nativa de metadados:
+- Se você criar um lembrete manualmente via Command Palette enquanto estiver no topo da nota ou dentro do bloco de propriedades/frontmatter (`---`), o registro é inserido **estritamente após o fechamento do frontmatter** (`---`), garantindo que suas propriedades YAML nunca sejam corrompidas.
 
-### Configurar o Google Calendar
+---
 
-No Google Cloud Console (ou no seu Apps Script já implantado), você precisa:
+### Convivência com o Natural Language Dates Redux
 
-1. Ter um Google Apps Script publicado como **Web App** com o endpoint `doPost`.
-2. O script aceita `POST` com JSON contendo:
-   - `key`: sua API Key
-   - `action: "create_event"`
-   - `title`: título do evento
-   - `startTime`: ISO datetime (ex: `2026-10-20T14:00:00`)
-   - `endTime`: ISO datetime
-   - `calendarId`: opcional (padrão: `primary`)
-   - `description`: opcional
+O plugin foi desenhado para conviver harmoniosamente com plugins de data em linguagem natural como o **Natural Language Dates Redux**:
+- O caractere `@` isolado continua reservado para o autocomplete de datas do Natural Language Dates (`@today`, `@tomorrow`, `@yesterday`, etc.).
+- Ao digitar `@remind` (seguido de `Enter`, `Tab`, `Espaço` ou pausa na digitação), o Smart Notes detecta a intenção de agendamento, dispensa o menu de datas concorrente e abre o modal de criação de compromisso sem qualquer conflito.
 
-3. No Obsidian, vá em **Configurações → Smart Notes → Google Calendar (Apps Script)** e preencha:
-   - **URL do Webhook**: URL do seu Apps Script Web App (`.../exec`)
-   - **API Key**: a chave configurada no Apps Script
-   - **ID do Calendário**: `primary` ou outro ID de calendário
+---
 
-> ⚠️ A API Key é salva no `data.json` do plugin dentro do vault (não no código-fonte). Não compartilhe esse arquivo publicamente.
+### Configurar o Google Calendar (Google Apps Script)
+
+A integração utiliza um Web App do **Google Apps Script** conectado ao Google Calendar da sua conta Google.
+
+#### 1. Script pronto incluído no projeto (`src/reminder/index.gs`)
+O arquivo [`src/reminder/index.gs`](file:///c:/Users/danny/code/smart-notes-books/src/reminder/index.gs) neste repositório contém a versão completa do script (baseada no fork do AnythingLLM Calendar Bridge com suporte a reminders de popup).
+
+1. Acesse o [Google Apps Script](https://script.google.com/) e crie um novo projeto (ex.: `Obsidian Calendar Bridge`).
+2. Cole o conteúdo de [`src/reminder/index.gs`](file:///c:/Users/danny/code/smart-notes-books/src/reminder/index.gs) no editor.
+3. No topo do script, altere a constante `API_KEY` para uma chave secreta e segura de sua escolha:
+   ```javascript
+   const API_KEY = "SUA_CHAVE_SECRETA_AQUI";
+   ```
+4. Clique em **Implantar (Deploy)** → **Nova implantação (New deployment)**:
+   - **Tipo:** Aplicativo da Web (Web app).
+   - **Executar como (Execute as):** Eu (sua conta Google).
+   - **Quem tem acesso (Who has access):** Qualquer pessoa (Anyone).
+5. Autorize as permissões de acesso ao Google Calendar solicitadas pelo Google.
+6. Copie a **URL do Web App** gerada (terminada em `/exec`).
+
+#### 2. Configurar no Obsidian
+No Obsidian, acesse **Configurações → Smart Notes → Google Calendar (Apps Script)** e preencha:
+- **URL do Webhook:** Cole a URL do Web App (`https://script.google.com/macros/s/.../exec`).
+- **API Key:** Digite a mesma chave secreta que você definiu na constante `API_KEY` do script.
+- **ID do Calendário:** `primary` (calendário principal) ou o ID de um calendário específico (ex: `...@group.calendar.google.com`).
+
+> ⚠️ As credenciais são armazenadas com segurança no arquivo `data.json` do plugin dentro da pasta `.obsidian/` do seu vault local. Nunca compartilhe esse arquivo publicamente.
 
 ---
 
