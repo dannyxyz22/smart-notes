@@ -239,6 +239,7 @@ function serializeGuest(guest) {
 function serializeEvent(event) {
   const isAllDay = event.isAllDayEvent();
   const isRecurring = event.isRecurringEvent();
+  const myStatus = event.getMyStatus();
 
   const result = {
     eventId: event.getId(),
@@ -249,7 +250,7 @@ function serializeEvent(event) {
     isAllDayEvent: isAllDay,
     isRecurringEvent: isRecurring,
     isOwnedByMe: event.isOwnedByMe(),
-    myStatus: event.getMyStatus().toString(),
+    myStatus: myStatus == null ? null : myStatus.toString(),
     dateCreated: event.getDateCreated(),
     lastUpdated: event.getLastUpdated(),
     creators: event.getCreators(),
